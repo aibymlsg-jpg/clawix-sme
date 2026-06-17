@@ -28,12 +28,14 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ProviderModelFields, agentFormInput, useProviders } from '../agent-form-fields';
 import { AgentMcpTools } from '../agent-mcp-tools';
+import { OrchestrationFlow } from '@/components/dashboard/orchestration-flow';
+import { AGENT_TEMPLATES, type AgentTemplate } from '../agent-templates';
 import {
   bindingsFromToolConfig,
   mergeMcpIntoToolConfig,
   type McpSelections,
 } from '../merge-tool-config';
-import { selectBoundAgentIds, type UserAgentBinding } from './bound-agents';
+import { selectBoundAgentIds } from './bound-agents';
 import {
   Table,
   TableBody,
@@ -95,6 +97,14 @@ interface AgentDefinition {
   createdBy?: { id: string; name: string; email: string } | null;
 }
 
+/** A UserAgent binding row as returned by GET /api/v1/agents/user-agents. */
+interface UserAgentBindingRow {
+  id: string;
+  userId: string;
+  agentDefinitionId: string;
+  agentDefinition?: { role?: string };
+}
+
 interface PaginatedAgents {
   data: AgentDefinition[];
   meta: { total: number; page: number; limit: number; totalPages: number };
@@ -132,6 +142,24 @@ function CreateAgentDialog({
   const [streamingEnabled, setStreamingEnabled] = useState(false);
   const [isPrimary, setIsPrimary] = useState(allowRoleSelect);
   const [errors, setErrors] = useState<FieldErrors>({});
+  // Starter template: clicking a chip re-mounts the form so uncontrolled
+  // inputs re-read their defaultValue.
+  const [tpl, setTpl] = useState<AgentTemplate>(AGENT_TEMPLATES[0]!);
+  const [applyCount, setApplyCount] = useState(0);
+
+  useEffect(() => {
+    if (open) {
+      setTpl(AGENT_TEMPLATES[0]!);
+      setApplyCount((c) => c + 1);
+      setErrors({});
+    }
+  }, [open]);
+
+  const applyTemplate = (next: AgentTemplate) => {
+    setTpl(next);
+    setApplyCount((c) => c + 1);
+    setErrors({});
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -140,7 +168,40 @@ function CreateAgentDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+
+        {/* Illustration + flow diagram */}
+        <OrchestrationFlow variant="agent" />
+
+        {/* Starter templates */}
+        <div>
+          <p className="mb-2 text-sm font-medium text-foreground">Start from a template</p>
+          <div className="flex flex-wrap gap-2">
+            {AGENT_TEMPLATES.map((tt) => (
+              <button
+                key={tt.id}
+                type="button"
+                onClick={() => {
+                  applyTemplate(tt);
+                }}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors',
+                  tpl.id === tt.id
+                    ? 'border-amber-500 bg-amber-500/10 text-amber-500'
+                    : 'border-input text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <span>{tt.emoji}</span>
+                {tt.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Templates prefill the fields below — edit anything before creating.
+          </p>
+        </div>
+
         <form
+          key={`${tpl.id}-${applyCount}`}
           onSubmit={(e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
@@ -163,6 +224,7 @@ function CreateAgentDialog({
               name="name"
               placeholder="Research Assistant"
               maxLength={100}
+              defaultValue={tpl.name}
               aria-invalid={errors['name'] ? true : undefined}
               required
             />
@@ -176,6 +238,7 @@ function CreateAgentDialog({
               name="description"
               rows={2}
               maxLength={500}
+              defaultValue={tpl.description}
               className="rounded-md border bg-background px-3 py-2 text-sm"
               placeholder="Optional description of this agent"
             />
@@ -188,6 +251,7 @@ function CreateAgentDialog({
               id="create-systemPrompt"
               name="systemPrompt"
               rows={6}
+              defaultValue={tpl.systemPrompt}
               className="rounded-md border bg-background px-3 py-2 text-sm"
               placeholder="You are a helpful AI assistant..."
               aria-invalid={errors['systemPrompt'] ? true : undefined}
@@ -490,6 +554,7 @@ function OfficialAgentsTable({
   saving,
   onEdit,
   onToggleActive,
+  onSetPrimary,
   boundAgentIds,
 }: {
   agents: AgentDefinition[];
@@ -497,6 +562,8 @@ function OfficialAgentsTable({
   saving: boolean;
   onEdit: (agent: AgentDefinition) => void;
   onToggleActive: (agent: AgentDefinition) => void;
+  /** Set this primary agent as the current user's bound primary. */
+  onSetPrimary: (agent: AgentDefinition) => void;
   /** AgentDefinition.id values bound to the current user via UserAgent. */
   boundAgentIds: ReadonlySet<string>;
 }) {
@@ -548,9 +615,17 @@ function OfficialAgentsTable({
                       Active
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="text-muted-foreground">
+                    <button
+                      type="button"
+                      disabled={saving || !isAdmin}
+                      onClick={() => {
+                        onSetPrimary(agent);
+                      }}
+                      title="Set as your primary assistant"
+                      className="rounded-full border border-input px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:border-emerald-500/40 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
                       Inactive
-                    </Badge>
+                    </button>
                   )
                 ) : (
                   <Switch
@@ -1210,6 +1285,9 @@ export default function UserAgentsPage() {
   const { user } = useAuth();
   const [officialAgents, setOfficialAgents] = useState<AgentDefinition[]>([]);
   const [boundAgentIds, setBoundAgentIds] = useState<ReadonlySet<string>>(new Set());
+  // The current user's existing primary UserAgent binding id (if any), used to
+  // switch which primary agent they're bound to.
+  const [myPrimaryBindingId, setMyPrimaryBindingId] = useState<string | null>(null);
   const [mySubAgents, setMySubAgents] = useState<AgentDefinition[]>([]);
   const [otherUsersSubAgents, setOtherUsersSubAgents] = useState<
     Map<string, { user: { name: string; email: string }; agents: AgentDefinition[] }>
@@ -1237,11 +1315,16 @@ export default function UserAgentsPage() {
         // For admins it returns ALL users' bindings, so selectBoundAgentIds
         // filters to the current user — boundAgentIds must only reflect *my*
         // assigned primary.
-        authFetch<UserAgentBinding[]>('/api/v1/agents/user-agents').catch(() => []),
+        authFetch<UserAgentBindingRow[]>('/api/v1/agents/user-agents').catch(() => []),
       ]);
       const all = Array.isArray(agentsRes.data) ? agentsRes.data : [];
       const bindings = Array.isArray(userAgentsRes) ? userAgentsRes : [];
       setBoundAgentIds(selectBoundAgentIds(bindings, currentUserId));
+      // Find my current primary binding so the "Inactive" buttons can move it.
+      const myPrimary = bindings.find(
+        (b) => b.userId === currentUserId && b.agentDefinition?.role === 'primary',
+      );
+      setMyPrimaryBindingId(myPrimary?.id ?? null);
 
       // Official agents (primary first, then workers)
       setOfficialAgents(
@@ -1394,6 +1477,34 @@ export default function UserAgentsPage() {
     }
   }
 
+  // Set a primary agent as the current user's bound primary. Moves the existing
+  // primary binding (so the previously-active primary flips to Inactive), or
+  // creates one if none exists yet.
+  async function handleSetPrimary(agent: AgentDefinition) {
+    if (!currentUserId) return;
+    setSaving(true);
+    setError('');
+    try {
+      if (myPrimaryBindingId) {
+        await authFetch(`/api/v1/agents/user-agents/${myPrimaryBindingId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ agentDefinitionId: agent.id }),
+        });
+      } else {
+        await authFetch('/api/v1/agents/user-agents', {
+          method: 'POST',
+          body: JSON.stringify({ userId: currentUserId, agentDefinitionId: agent.id }),
+        });
+      }
+      await fetchAgents();
+      toast.success(`${agent.name} is now your primary assistant`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to set primary agent');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   // Handle edit vs view based on ownership
   function handleAgentAction(agent: AgentDefinition, isOwner: boolean) {
     if (isOwner || (isAdmin && agent.isOfficial)) {
@@ -1455,6 +1566,7 @@ export default function UserAgentsPage() {
               saving={saving}
               onEdit={setEditAgent}
               onToggleActive={handleToggleActive}
+              onSetPrimary={handleSetPrimary}
               boundAgentIds={boundAgentIds}
             />
           </div>
