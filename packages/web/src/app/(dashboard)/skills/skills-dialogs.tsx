@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { ChevronDown, Loader2, Wand2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { authFetch } from '@/lib/auth';
+import { OrchestrationFlow } from '@/components/dashboard/orchestration-flow';
+import { skillContentTemplate, SKILL_SAMPLES } from './skill-templates';
 import { useLanguage } from '@/i18n';
 
 const NAME_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -33,6 +35,8 @@ export function CreateDialog({
   const { t } = useLanguage();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [content, setContent] = useState('');
+  const [contentOpen, setContentOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
 
@@ -40,9 +44,25 @@ export function CreateDialog({
     if (!open) {
       setName('');
       setDescription('');
+      setContent('');
+      setContentOpen(false);
       setErr('');
     }
   }, [open]);
+
+  const loadTemplate = () => {
+    setContent(skillContentTemplate(name, description));
+    setContentOpen(true);
+  };
+
+  const loadSample = (sampleName: string) => {
+    const sample = SKILL_SAMPLES.find((s) => s.name === sampleName);
+    if (!sample) return;
+    setName(sample.name);
+    setDescription(sample.description);
+    setContent(sample.content);
+    setContentOpen(true);
+  };
 
   const handleSubmit = async () => {
     setErr('');
@@ -61,8 +81,18 @@ export function CreateDialog({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim(), description: description.trim() }),
       });
+      // If a SKILL.md body was authored (template or example), save it too.
+      if (content.trim().length > 0) {
+        await authFetch(`/api/v1/skills/${name.trim()}/content`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: content.trim() }),
+        });
+      }
       setName('');
       setDescription('');
+      setContent('');
+      setContentOpen(false);
       onCreated();
     } catch (e) {
       setErr(e instanceof Error ? e.message : t('skillsUi.errCreateFailed'));
@@ -73,15 +103,18 @@ export function CreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="flex max-h-[90vh] flex-col">
+      <DialogContent className="flex max-h-[90vh] flex-col !w-[56vw] !max-w-none">
         <DialogHeader>
           <DialogTitle>{t('skillsUi.createTitle')}</DialogTitle>
           <DialogDescription>
-            {t('skillsUi.createDescBefore')}{' '}
-            <code>/skills/&lt;name&gt;/SKILL.md</code> {t('skillsUi.createDescAfter')}
+            {t('skillsUi.createDescBefore')} <code>/skills/&lt;name&gt;/SKILL.md</code>{' '}
+            {t('skillsUi.createDescAfter')}
           </DialogDescription>
         </DialogHeader>
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+          {/* Illustration + flow diagram */}
+          <OrchestrationFlow variant="skill" />
+
           <Input
             placeholder={t('skillsUi.namePlaceholder')}
             value={name}
@@ -91,8 +124,68 @@ export function CreateDialog({
             placeholder={t('skillsUi.descriptionPlaceholder')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            rows={4}
+            rows={3}
           />
+
+          {/* Template / example controls */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={loadTemplate}
+              className="flex items-center gap-1 rounded border px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <Wand2 className="size-3" />
+              Use template
+            </button>
+            <span className="text-xs text-muted-foreground">or load an example:</span>
+            <select
+              className="flex-1 rounded border bg-background px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+              value=""
+              onChange={(e) => {
+                loadSample(e.target.value);
+              }}
+            >
+              <option value="" disabled>
+                Select an example skill…
+              </option>
+              {SKILL_SAMPLES.map((s) => (
+                <option key={s.name} value={s.name}>
+                  {s.emoji} {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Collapsible SKILL.md editor (the scaffold's ## Workflow is the flow) */}
+          <div className="rounded-md border text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setContentOpen((v) => !v);
+              }}
+              className="flex w-full items-center justify-between px-3 py-2 text-left font-medium text-muted-foreground hover:text-foreground"
+            >
+              <span>SKILL.md content {content.trim() ? '(customised)' : '(optional)'}</span>
+              <ChevronDown
+                className={`size-3.5 transition-transform ${contentOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {contentOpen && (
+              <div className="border-t p-2">
+                <p className="mb-2 px-1 text-muted-foreground">
+                  Saved as the skill&rsquo;s SKILL.md. Edit freely — the ## Workflow section is the
+                  step-by-step flow the agent follows.
+                </p>
+                <Textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="min-h-[40vh] font-mono text-xs leading-relaxed"
+                  placeholder={skillContentTemplate('my-skill', 'What this skill does.')}
+                />
+              </div>
+            )}
+          </div>
+
           {err && <p className="text-sm text-destructive">{err}</p>}
         </div>
         <DialogFooter>
@@ -222,8 +315,7 @@ export function RenameDialog({
         <DialogHeader>
           <DialogTitle>{t('skillsUi.renameTitle')}</DialogTitle>
           <DialogDescription>
-            {t('skillsUi.renameDescBefore')} <code>name:</code>{' '}
-            {t('skillsUi.renameDescAfter')}
+            {t('skillsUi.renameDescBefore')} <code>name:</code> {t('skillsUi.renameDescAfter')}
           </DialogDescription>
         </DialogHeader>
         <Input value={newName} onChange={(e) => setNewName(e.target.value)} />
@@ -272,9 +364,7 @@ export function PreviewDialog({
                   : 'border-primary/40 bg-primary/15 text-primary'
               }
             >
-              {target.source === 'builtin'
-                ? t('skillsUi.badgeBuiltin')
-                : t('skillsUi.badgeCustom')}
+              {target.source === 'builtin' ? t('skillsUi.badgeBuiltin') : t('skillsUi.badgeCustom')}
             </Badge>
           </DialogTitle>
           <DialogDescription>

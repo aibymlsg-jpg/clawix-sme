@@ -40,8 +40,8 @@ const suggestions = [
     description: 'targeting SMB customers on LinkedIn',
   },
   {
-    title: 'Summarize this month’s pipeline',
-    description: 'with top deals and risks called out',
+    title: 'Summarize this month’s sales',
+    description: 'with top deals and issues called out',
   },
   {
     title: 'Write a customer follow-up email',

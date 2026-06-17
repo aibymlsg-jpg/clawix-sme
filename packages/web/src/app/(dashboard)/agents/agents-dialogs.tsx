@@ -15,6 +15,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FieldError } from '@/components/ui/field-error';
+import { cn } from '@/lib/utils';
+import { OrchestrationFlow } from '@/components/dashboard/orchestration-flow';
+import { AGENT_TEMPLATES, type AgentTemplate } from './agent-templates';
 import { agentFormSchema, parseForm, type FieldErrors } from '@/lib/validation';
 import { ProviderModelFields, agentFormInput, useProviders } from './agent-form-fields';
 import { AgentMcpTools } from './agent-mcp-tools';
@@ -43,6 +46,25 @@ export function CreateAgentDialog({
   const providers = useProviders();
   const [streamingEnabled, setStreamingEnabled] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
+  // Selected starter template + a counter so re-applying the same template
+  // re-mounts the form (uncontrolled inputs re-read their defaultValue).
+  const [tpl, setTpl] = useState<AgentTemplate>(AGENT_TEMPLATES[0]!);
+  const [applyCount, setApplyCount] = useState(0);
+
+  // Reset to the blank template each time the dialog is opened.
+  useEffect(() => {
+    if (open) {
+      setTpl(AGENT_TEMPLATES[0]!);
+      setApplyCount((c) => c + 1);
+      setErrors({});
+    }
+  }, [open]);
+
+  const applyTemplate = (t: AgentTemplate) => {
+    setTpl(t);
+    setApplyCount((c) => c + 1);
+    setErrors({});
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,7 +75,40 @@ export function CreateAgentDialog({
             Define a new AI agent with its model, prompt, and skills.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Illustration + flow diagram */}
+        <OrchestrationFlow variant="agent" />
+
+        {/* Starter templates */}
+        <div>
+          <p className="mb-2 text-sm font-medium text-foreground">Start from a template</p>
+          <div className="flex flex-wrap gap-2">
+            {AGENT_TEMPLATES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => {
+                  applyTemplate(t);
+                }}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors',
+                  tpl.id === t.id
+                    ? 'border-sme-amber bg-sme-amber/10 text-sme-amber'
+                    : 'border-border bg-card text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <span>{t.emoji}</span>
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Templates prefill the fields below — edit anything before creating.
+          </p>
+        </div>
+
         <form
+          key={`${tpl.id}-${applyCount}`}
           onSubmit={(e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
@@ -76,6 +131,7 @@ export function CreateAgentDialog({
               name="name"
               placeholder="Research Assistant"
               maxLength={100}
+              defaultValue={tpl.name}
               aria-invalid={errors['name'] ? true : undefined}
               required
             />
@@ -89,6 +145,7 @@ export function CreateAgentDialog({
               name="description"
               rows={2}
               maxLength={500}
+              defaultValue={tpl.description}
               className="rounded-md border bg-background px-3 py-2 text-sm"
               placeholder="Optional description of this agent"
             />
@@ -101,6 +158,7 @@ export function CreateAgentDialog({
               id="create-systemPrompt"
               name="systemPrompt"
               rows={6}
+              defaultValue={tpl.systemPrompt}
               className="rounded-md border bg-background px-3 py-2 text-sm"
               placeholder="You are a helpful AI assistant..."
               aria-invalid={errors['systemPrompt'] ? true : undefined}

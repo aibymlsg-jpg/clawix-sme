@@ -17,6 +17,7 @@ import { PrismaClient } from './generated/prisma/client.js';
 import bcrypt from 'bcryptjs';
 import { encrypt } from './common/crypto.js';
 import { encryptChannelConfig } from './channels/channel-config-crypto.js';
+import { DOMAIN_AGENTS } from './domain-agents.js';
 
 const connectionString = process.env['DATABASE_URL'];
 if (!connectionString) {
@@ -299,6 +300,39 @@ async function main(): Promise<void> {
         },
       });
       console.log(`[bootstrap]   Worker seeded: ${worker.name}`);
+    }
+  }
+
+  // --- Designated domain primary agents (one per SME industry) ---
+  // Idempotent: created only if a primary of the same name is missing. These are
+  // official (visible to all users) and assignable as any user's primary agent.
+  for (const agent of DOMAIN_AGENTS) {
+    const existing = await prisma.agentDefinition.findFirst({
+      where: { name: agent.name, role: 'primary' },
+    });
+    if (!existing) {
+      await prisma.agentDefinition.create({
+        data: {
+          name: agent.name,
+          description: agent.description,
+          systemPrompt: agent.systemPrompt,
+          role: 'primary',
+          provider: defaultProvider,
+          model: defaultModel,
+          maxTokensPerRun: agent.maxTokensPerRun,
+          containerConfig: {
+            image: process.env['AGENT_CONTAINER_IMAGE'] ?? 'clawix-agent:latest',
+            cpuLimit: '1',
+            memoryLimit: '512m',
+            timeoutSeconds: 300,
+            readOnlyRootfs: true,
+            allowedMounts: [],
+          },
+          isActive: true,
+          isOfficial: true,
+        },
+      });
+      console.log(`[bootstrap]   Domain agent seeded: ${agent.name}`);
     }
   }
 
