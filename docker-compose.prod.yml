@@ -1,0 +1,302 @@
+# Clawix Production Docker Compose
+# Usage:
+#   Build:  docker compose -f docker-compose.prod.yml build
+#   Start:  docker compose -f docker-compose.prod.yml up -d
+#   Logs:   docker compose -f docker-compose.prod.yml logs -f
+#   Stop:   docker compose -f docker-compose.prod.yml down
+
+services:
+  # Bundled TLS-terminating reverse proxy + Let's Encrypt. OPT-IN: these only
+  # start when the "tls" profile is enabled, i.e. for public-domain deploys:
+  #   docker compose -f docker-compose.prod.yml --profile tls up -d
+  # Local installs (http://localhost:3000) and setups that put their own proxy
+  # (Caddy, Traefik, Tailscale Funnel) in front leave the profile off and never
+  # touch these services. When enabling the profile, set DOMAIN and
+  # LETSENCRYPT_EMAIL in .env so certificates can be issued.
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:latest
+    container_name: clawix-nginx-proxy
+    restart: unless-stopped
+    profiles: ["tls"]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx-certs:/etc/nginx/certs
+      - nginx-html:/usr/share/nginx/html
+      - ./infra/nginx/vhost.d:/etc/nginx/vhost.d
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - clawix-internal
+
+  acme-companion:
+    image: nginxproxy/acme-companion:latest
+    container_name: clawix-acme
+    restart: unless-stopped
+    profiles: ["tls"]
+    # Default-empty so compose interpolation (which runs before profiles are
+    # applied) never fails for non-TLS installs. Set LETSENCRYPT_EMAIL in .env
+    # before enabling the "tls" profile, or acme-companion cannot issue certs.
+    environment:
+      DEFAULT_EMAIL: ${LETSENCRYPT_EMAIL:-}
+      NGINX_PROXY_CONTAINER: clawix-nginx-proxy
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme-state:/etc/acme.sh
+    depends_on:
+      - nginx-proxy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: clawix-postgres
+    restart: unless-stopped
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-clawix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-clawix}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-clawix}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - clawix-internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: clawix-redis
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:6379:6379'
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - clawix-internal
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/api/Dockerfile
+    image: clawix-api:latest
+    container_name: clawix-api
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    ports:
+      - '3001:3001'
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-clawix}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-clawix}?schema=public
+      REDIS_URL: redis://redis:6379
+      PORT: '3001'
+      HOST: '0.0.0.0'
+      LOG_LEVEL: info
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-12}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS is required}
+      PROVIDER_ENCRYPTION_KEY: ${PROVIDER_ENCRYPTION_KEY:?PROVIDER_ENCRYPTION_KEY is required (64 hex chars)}
+      # Bootstrap (optional — consumed by dist/bootstrap.js on first start,
+      # skipped silently if INITIAL_ADMIN_EMAIL is empty)
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
+      INITIAL_ADMIN_NAME: ${INITIAL_ADMIN_NAME:-}
+      DEFAULT_PROVIDER: ${DEFAULT_PROVIDER:-openai}
+      DEFAULT_LLM_MODEL: ${DEFAULT_LLM_MODEL:-gpt-4o}
+      TEMPLATES_DIR: /app/infra/templates
+      WORKSPACE_BASE_PATH: /data
+      WORKSPACE_HOST_BASE_PATH: ${CLAWIX_HOST_DATA_DIR:-${PWD}/data}
+      SKILLS_BUILTIN_DIR: /app/skills/builtin
+      SKILLS_BUILTIN_HOST_DIR: ${CLAWIX_HOST_SKILLS_BUILTIN_DIR:-${PWD}/skills/builtin}
+      SKILLS_CUSTOM_DIR: /app/skills/custom
+      SKILLS_CUSTOM_HOST_DIR: ${CLAWIX_HOST_SKILLS_CUSTOM_DIR:-${PWD}/skills/custom}
+      SKILLS_PACKS_DIR: /app/skills/packs
+      # Public memory lives under the persistent /data bind mount so it
+      # survives `docker compose down` and image rebuilds.
+      # WhatsApp Baileys auth state — written under the persistent /data mount
+      # so the QR pairing survives container restarts.
+      WHATSAPP_AUTH_DIR: /data/whatsapp-auth
+      # ---- MCP per-user OAuth (authType=oauth servers) ----
+      # MCP_OAUTH_CALLBACK_URL: the OAuth redirect_uri — your PUBLIC API URL +
+      #   /mcp/oauth/callback (must be https in prod and registered verbatim on
+      #   the provider's OAuth client), e.g. https://api.example.com/mcp/oauth/callback
+      # WEB_BASE_URL: dashboard base used for the post-callback redirect.
+      # MCP_INTERNAL_ALLOWLIST: comma-separated host:port of internal MCP
+      #   sidecars to allow past the SSRF guard, e.g. clawix-gworkspace:8000
+      MCP_OAUTH_CALLBACK_URL: ${MCP_OAUTH_CALLBACK_URL:-}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3000}
+      MCP_INTERNAL_ALLOWLIST: ${MCP_INTERNAL_ALLOWLIST:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/data
+      - ./skills/builtin:/app/skills/builtin:ro
+      - ./skills/custom:/app/skills/custom
+      - ./skills/packs:/app/skills/packs:ro
+      - ./infra/templates:/app/infra/templates:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - clawix-internal
+      - clawix-browser-egress
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
+    image: clawix-web:latest
+    container_name: clawix-web
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      VIRTUAL_HOST: ${DOMAIN:-}
+      LETSENCRYPT_HOST: ${DOMAIN:-}
+      VIRTUAL_PORT: "3000"
+    depends_on:
+      - api
+    networks:
+      - clawix-internal
+
+  clawix-browser:
+    image: ghcr.io/browserless/chromium:latest
+    container_name: clawix-browser
+    restart: unless-stopped
+    user: '1000:1000'
+    # Note: read_only: true breaks Chromium 1217+ — its crashpad handler
+    # subprocess loses argv when the rootfs is read-only, causing
+    # `chrome_crashpad_handler: --database is required` and aborting launch.
+    # Other isolation (non-root user, cap_drop, no-new-privileges, internal
+    # egress network, resource limits) still applies.
+    cap_drop: [ALL]
+    cap_add: [SYS_ADMIN]
+    security_opt:
+      - no-new-privileges
+    mem_limit: 2g
+    cpus: 2.0
+    pids_limit: 200
+    shm_size: 256m
+    environment:
+      MAX_CONCURRENT_SESSIONS: '${BROWSER_SIDECAR_MAX_SESSIONS:-25}'
+      TOKEN: '${BROWSER_AUTH_TOKEN}'
+      # Disable Browserless' built-in queue; we queue at the API layer.
+      QUEUED: '0'
+      # browserless health endpoint is on /health
+      HEALTHCHECK: 'true'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O - "http://127.0.0.1:3000/active?token=$$TOKEN"']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - clawix-browser-egress
+      - clawix-browser-net
+
+  clawix-pypi-proxy:
+    build:
+      context: ./infra/docker/pypi-proxy
+    image: clawix-pypi-proxy:latest
+    container_name: clawix-pypi-proxy
+    restart: unless-stopped
+    # Note: this service intentionally does NOT use cap_drop:[ALL] or
+    # no-new-privileges. The entrypoint needs to start as root to chown
+    # the named volume mount (/home/devpi/server) and then SUID-drop to
+    # the devpi user via gosu. Both mechanisms require capabilities and
+    # SUID semantics that those hardening flags would block. Defense-in-
+    # depth still comes from: non-root devpi-server runtime, isolated
+    # Docker network, read-only allowlist mount, devpi listening only on
+    # 127.0.0.1 (nginx is the only external entry point).
+    mem_limit: 1024m
+    cpus: 1.0
+    pids_limit: 200
+    environment:
+      ALLOWLIST_FILE: /etc/clawix/python-allowlist.txt
+    volumes:
+      - clawix-pypi-cache:/home/devpi/server
+      - ./infra/python-allowlist/${PYTHON_ALLOWLIST_TIER:-extended}.txt:/etc/clawix/python-allowlist.txt:ro
+    networks:
+      # clawix-internal: API health probe + warm-pool runner pip installs.
+      # clawix-python-net-egress: ephemeral python_run_net runners reach the proxy.
+      - clawix-internal
+      - clawix-python-net-egress
+    healthcheck:
+      test: ['CMD', 'curl', '-fsSL', 'http://localhost:3141/+api']
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 60s
+
+  # ---- Google Workspace MCP sidecar (OAuth authType=oauth) — optional ----
+  # Self-hosted taylorwilsdon/google_workspace_mcp in bearer-proxy mode: clawix
+  # does the per-user Google OAuth and forwards each user's access token; this
+  # server validates it via Google userinfo and acts as that user. Uncomment,
+  # then set MCP_INTERNAL_ALLOWLIST=clawix-gworkspace:8000 + MCP_OAUTH_CALLBACK_URL
+  # on the api service, and import http://clawix-gworkspace:8000/mcp/ as authType=oauth.
+  # clawix-gworkspace:
+  #   image: ghcr.io/taylorwilsdon/google_workspace_mcp:latest
+  #   container_name: clawix-gworkspace
+  #   restart: unless-stopped
+  #   environment:
+  #     MCP_ENABLE_OAUTH21: 'true'
+  #     EXTERNAL_OAUTH21_PROVIDER: 'true' # clawix issues/forwards the Google token
+  #     WORKSPACE_MCP_STATELESS_MODE: 'true' # no per-user session on the sidecar
+  #     GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:?same client id clawix uses}
+  #     FASTMCP_SERVER_AUTH_GOOGLE_JWT_SIGNING_KEY: ${GWORKSPACE_JWT_SIGNING_KEY:?random secret}
+  #     WORKSPACE_MCP_PORT: '8000'
+  #   command: ['--transport', 'streamable-http', '--tools', 'gmail', 'drive', 'docs', 'sheets']
+  #   networks:
+  #     - clawix-internal
+
+volumes:
+  postgres_data:
+  redis_data:
+  clawix-pypi-cache:
+  nginx-certs:
+  nginx-html:
+  acme-state:
+
+networks:
+  # `name:` pins the actual Docker network name, bypassing Compose's
+  # `<project>_<network>` prefix. The API spawns sibling containers via the
+  # host docker socket and attaches them by these exact names — without
+  # pinning, attach fails with "network not found".
+  clawix-internal:
+    name: clawix-internal
+    driver: bridge
+  clawix-browser-egress:
+    name: clawix-browser-egress
+    driver: bridge
+    internal: true # blocks traffic from this network to the host/internet
+  clawix-browser-net:
+    name: clawix-browser-net
+    driver: bridge
+    # External default: this network reaches the public internet by default.
+    # RFC1918 blocking is enforced by the deploy environment's firewall rules
+    # or a sidecar egress proxy. See docs/specs/2026-05-06-web-fetch-and-browser-tools-design.md §Egress.
+  clawix-python-net-egress:
+    name: clawix-python-net-egress
+    driver: bridge
+    # External default: this network reaches the public internet by default.
+    # RFC1918 blocking is enforced by the deploy environment's firewall rules
+    # or a sidecar egress proxy. Used by python_run_net ephemeral runners and
+    # also carries proxy traffic from those runners to clawix-pypi-proxy.
+    # See docs/specs/2026-05-08-python-run-tool-design.md §Security.

@@ -1,0 +1,89 @@
+{
+  "id": "restaurant",
+  "name": "Restaurant & F&B",
+  "icon": "🍜",
+  "color": "#e8584a",
+  "description": "Daily stock reconciliation, supplier reorder drafts, reservation management, and petty-cash logging for small restaurants and F&B operators. Reorders and supplier messages are drafted for the owner to approve before they go out.",
+  "tags": ["restaurant", "fnb", "hospitality", "stock", "reservations", "sme"],
+  "skills": ["restaurant-shared", "stock-reconciliation", "supplier-reorder"],
+  "agents": [
+    {
+      "name": "fnb-coordinator",
+      "role": "primary",
+      "model": "claude-sonnet-4-6",
+      "description": "Routes the owner's request to stock, supplier, or front-of-house work. Holds the menu, supplier, and takings context.",
+      "skills": ["restaurant-shared", "stock-reconciliation", "supplier-reorder"]
+    },
+    {
+      "name": "stock-sense",
+      "role": "worker",
+      "model": "claude-sonnet-4-6",
+      "description": "Reads POS and delivery notes, computes daily variance, and flags what to reorder before you run out.",
+      "skills": ["restaurant-shared", "stock-reconciliation"]
+    },
+    {
+      "name": "supplier-relay",
+      "role": "worker",
+      "model": "claude-sonnet-4-6",
+      "description": "Drafts reorder messages per supplier in their preferred channel and format — held for approval.",
+      "skills": ["restaurant-shared", "supplier-reorder"]
+    },
+    {
+      "name": "table-sync",
+      "role": "worker",
+      "model": "claude-sonnet-4-6",
+      "description": "Manages reservations, drafts confirmations, and keeps the floor plan clash-free.",
+      "skills": ["restaurant-shared"]
+    }
+  ],
+  "subagents": [
+    {
+      "name": "pos-reader",
+      "model": "claude-haiku-4-5",
+      "description": "Parses the day's POS export and delivery notes into a normalised sales-and-receipts table."
+    },
+    {
+      "name": "reorder-drafter",
+      "model": "claude-haiku-4-5",
+      "description": "Turns the variance report into per-supplier reorder quantities against par levels."
+    },
+    {
+      "name": "floor-planner",
+      "model": "claude-haiku-4-5",
+      "description": "Checks proposed reservations against table capacity and turn times to avoid clashes."
+    }
+  ],
+  "governance": {
+    "humanInLoopActions": [
+      "whatsapp.send",
+      "email.send",
+      "supplier_order.submit",
+      "reservation.confirm",
+      "email.create_draft"
+    ],
+    "guardrails": [
+      "Reorders and supplier messages are drafts until the owner approves them",
+      "Stock variance is computed from POS and delivery data — never estimated without a source",
+      "Daily takings and petty cash reconciled to the cent; discrepancies flagged, not smoothed over",
+      "Customer reservation details stored under /workspace/service/<date>/ — not in memory"
+    ]
+  },
+  "inspirations": [
+    {
+      "title": "Daily stock reconciliation",
+      "prompt": "Reconcile today's orders against stock from the POS export and this morning's delivery note. Tell me what to reorder before Saturday."
+    },
+    {
+      "title": "Supplier reorder",
+      "prompt": "Draft my reorder messages — vegetables to Kwan's on WhatsApp, dry goods to the wholesaler by email. Use my usual par levels."
+    },
+    {
+      "title": "Manage reservations",
+      "prompt": "I have 6 bookings for Friday dinner plus two walk-in requests. Lay out a clash-free floor plan and draft the confirmation messages."
+    },
+    {
+      "title": "Daily takings",
+      "prompt": "Reconcile today's takings against the POS total and the petty cash float. Flag any discrepancy and log the daily summary."
+    }
+  ]
+}

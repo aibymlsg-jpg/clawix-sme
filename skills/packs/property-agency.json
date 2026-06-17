@@ -1,0 +1,89 @@
+{
+  "id": "property-agency",
+  "name": "Property Agency",
+  "icon": "🏠",
+  "color": "#2ecc9a",
+  "description": "Listing copy, photo briefs, tenancy agreement drafting, viewing coordination, and commission pipeline tracking for small property agencies in HK / SG / APAC. Every client-facing document is a draft for your review — nothing is sent without approval.",
+  "tags": ["property", "real-estate", "agency", "listing", "tenancy", "sme"],
+  "skills": ["property-agency-shared", "listing-writer", "tenancy-drafting"],
+  "agents": [
+    {
+      "name": "agency-coordinator",
+      "role": "primary",
+      "model": "claude-sonnet-4-6",
+      "description": "Reads the owner's intent and routes work to the right specialist — listing, tenancy, or viewing. Maintains the client and pipeline context.",
+      "skills": ["property-agency-shared", "listing-writer", "tenancy-drafting"]
+    },
+    {
+      "name": "listing-pro",
+      "role": "worker",
+      "model": "claude-sonnet-4-6",
+      "description": "Writes listing copy, recommends photo angles, and prepares the portal-ready data sheet from property notes.",
+      "skills": ["property-agency-shared", "listing-writer"]
+    },
+    {
+      "name": "tenancy-drafter",
+      "role": "worker",
+      "model": "claude-sonnet-4-6",
+      "description": "Drafts tenancy agreements from standard templates, flags non-standard clauses, and prepares stamp duty notes.",
+      "skills": ["property-agency-shared", "tenancy-drafting"]
+    },
+    {
+      "name": "viewing-sync",
+      "role": "worker",
+      "model": "claude-sonnet-4-6",
+      "description": "Coordinates viewing slots, drafts confirmations to prospects, and keeps the pipeline current without double-booking.",
+      "skills": ["property-agency-shared"]
+    }
+  ],
+  "subagents": [
+    {
+      "name": "photo-brief",
+      "model": "claude-haiku-4-5",
+      "description": "Turns property notes into a shot list and staging brief for the photographer."
+    },
+    {
+      "name": "clause-checker",
+      "model": "claude-haiku-4-5",
+      "description": "Compares a draft tenancy against the standard template and flags every deviation for human review."
+    },
+    {
+      "name": "portal-formatter",
+      "model": "claude-haiku-4-5",
+      "description": "Renders the final listing into the portal's required field format."
+    }
+  ],
+  "governance": {
+    "humanInLoopActions": [
+      "email.send",
+      "listing.publish",
+      "tenancy.execute",
+      "doc.export_pdf_docx",
+      "email.create_draft"
+    ],
+    "guardrails": [
+      "Every listing and tenancy is a draft for human review — never published or executed by an agent",
+      "Non-standard tenancy clauses are flagged, never silently accepted",
+      "Client and prospect personal data stored under /workspace/<deal>/clients/ — not in memory",
+      "Stamp duty and statutory figures are computed or sourced, never guessed"
+    ]
+  },
+  "inspirations": [
+    {
+      "title": "Draft a listing",
+      "prompt": "Prepare the listing for Unit 12B, Tower 3 — 720 sq ft, 2 bed, renovated, sea view. Write the copy, give me a photo brief, and format it for the portal."
+    },
+    {
+      "title": "Tenancy agreement",
+      "prompt": "Draft a 2-year tenancy for Unit 12B at HK$28,000/month, 2 months deposit, break clause at 12 months. Flag anything non-standard and note the stamp duty."
+    },
+    {
+      "title": "Coordinate viewings",
+      "prompt": "I have three prospects for Flat 5A this Saturday. Propose viewing slots 30 minutes apart, draft the confirmation messages, and update my pipeline."
+    },
+    {
+      "title": "Commission pipeline",
+      "prompt": "Summarise my open deals this month — stage, expected commission, and which ones need follow-up before month-end."
+    }
+  ]
+}

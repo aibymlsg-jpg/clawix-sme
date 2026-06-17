@@ -1,0 +1,711 @@
+// ============================================================================
+// Clawix — Prisma Schema
+// Phase 1: Data Layer
+// Single-org design: Policy (governance) + Group (collaboration) + Role (authz)
+// ============================================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// Policy (governance tier — quotas, limits, feature access)
+// ============================================================================
+
+model Policy {
+  id                           String   @id @default(cuid())
+  name                         String   @unique // "Free", "Pro", "Enterprise"
+  description                  String?
+  maxTokenBudget               Int? // monthly budget in USD cents (null = unlimited)
+  maxAgents                    Int      @default(5)
+  maxSkills                    Int      @default(10)
+  maxWikiPages                 Int      @default(1000)
+  maxAmbientPages              Int      @default(5)
+  wikiLintEnabled              Boolean  @default(true)
+  maxGroupsOwned               Int      @default(5)
+  allowedProviders             String[] // ["anthropic", "openai"]
+  features                     Json     @default("{}") // feature flags
+  maxScheduledTasks            Int      @default(5)
+  minCronIntervalSecs          Int      @default(300)
+  maxTokensPerCronRun          Int?
+  cronEnabled                  Boolean  @default(false)
+  allowBrowserCdp              Boolean  @default(false)
+  maxConcurrentBrowserSessions Int      @default(2)
+  allowPython                  Boolean  @default(true)
+  allowPythonNet               Boolean  @default(false)
+  pythonPackageAllowlist       String[] @default([])
+  maxPythonMemoryMb            Int      @default(512)
+  maxPythonTimeoutSecs         Int      @default(60)
+  maxPythonCpuCores            Int      @default(1)
+  maxConcurrentPythonRuns      Int      @default(2)
+  maxSubAgentRunMs             Int      @default(300000) // wall-clock cap per spawned sub-agent run (ms)
+  allowMcp                     Boolean  @default(false)
+  isActive                     Boolean  @default(true)
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+
+  users User[]
+}
+
+// ============================================================================
+// User
+// ============================================================================
+
+enum UserRole {
+  admin
+  developer
+  viewer
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String
+  passwordHash   String
+  role           UserRole  @default(viewer)
+  policyId       String
+  orgName        String?
+  isActive       Boolean   @default(true)
+  isEmailVerified Boolean  @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  telegramId     String?   @unique
+  whatsappJid    String?   @unique
+  wikiMigratedAt DateTime?
+
+  policy                  Policy            @relation(fields: [policyId], references: [id])
+  sessions                Session[]
+  auditLogs               AuditLog[]
+  wikiPages               WikiPage[]
+  groupMembers            GroupMember[]
+  notifications           Notification[]
+  userAgents              UserAgent[]
+  tasks                   Task[]
+  droplets                Droplet[]
+  createdAgentDefinitions AgentDefinition[] @relation("CreatedAgentDefinitions")
+  groupInvitesReceived    GroupInvite[]     @relation("GroupInviteInvitee")
+  groupInvitesSent        GroupInvite[]     @relation("GroupInviteInvitedBy")
+  wikiSharesAuthored      WikiShare[]       @relation("WikiSharedBy")
+  mcpConnections          McpConnection[]
+}
+
+// ============================================================================
+// DigitalOcean Droplets (subscription-provisioned per user)
+// ============================================================================
+
+enum DropletStatus {
+  creating
+  active
+  off
+  archive
+  deleting
+}
+
+model Droplet {
+  id             String        @id @default(cuid())
+  userId         String
+  doDropletId    Int // numeric ID assigned by DigitalOcean
+  name           String
+  region         String
+  size           String // DO size slug, e.g. "s-2vcpu-4gb" or "gpu-h100x1-80gb"
+  imageSlug      String        @default("ubuntu-24-04-x64")
+  ipv4           String?
+  ipv6           String?
+  status         DropletStatus @default(creating)
+  servicePackage String?
+  serviceField   String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([doDropletId])
+}
+
+// ============================================================================
+// Agent Definitions & Runs
+// ============================================================================
+
+enum AgentRole {
+  primary
+  worker
+}
+
+model AgentDefinition {
+  id               String    @id @default(cuid())
+  name             String
+  description      String?
+  systemPrompt     String    @default("")
+  role             AgentRole @default(primary)
+  provider         String    @default("anthropic")
+  model            String    @default("claude-sonnet-4-20250514")
+  apiBaseUrl       String? // for custom/self-hosted endpoints
+  skillIds         String[] // references to Skill.id
+  maxTokensPerRun  Int       @default(100000)
+  containerConfig  Json      @default("{}")
+  /// Per-tool configuration overrides. Schema:
+  /// { modelOverrides?: { [toolName: string]: string } }
+  /// Used by browser_vision (and future tools) to pin a model that differs
+  /// from the agent's default.
+  toolConfig       Json      @default("{}")
+  isActive         Boolean   @default(true)
+  isOfficial       Boolean   @default(true)
+  /// When true, intermediate model prose is streamed to the channel as
+  /// separate messages instead of bundled into a single final message.
+  streamingEnabled Boolean   @default(false)
+  createdById      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  agentRuns       AgentRun[]
+  sessions        Session[]
+  userAgents      UserAgent[]
+  tasks           Task[]
+  createdBy       User?               @relation("CreatedAgentDefinitions", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([isActive])
+  @@index([role, isActive])
+  @@index([createdById])
+}
+
+enum AgentStatus {
+  pending
+  idle
+  running
+  completed
+  failed
+  cancelled
+}
+
+model AgentRun {
+  id                String      @id @default(cuid())
+  agentDefinitionId String
+  sessionId         String?
+  status            AgentStatus @default(idle)
+  input             String
+  output            String?
+  error             String?
+  tokenUsage        Json        @default("{}") // TokenUsageRecord
+  // Captured at spawn time so a recovered orphan sub-agent can rebuild a
+  // BudgetTracker with the same cap it was spawned under. The cumulative
+  // `used` count from the parent is intentionally not persisted — recovered
+  // orphans get a fresh allowance.
+  tokenBudget       Int?
+  tokenGracePercent Int?
+  startedAt         DateTime    @default(now())
+  completedAt       DateTime?
+  parentAgentRunId  String?     @map("parent_agent_run_id")
+
+  agentDefinition AgentDefinition @relation(fields: [agentDefinitionId], references: [id], onDelete: Cascade)
+  session         Session?        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  parentRun       AgentRun?       @relation("SubAgentRuns", fields: [parentAgentRunId], references: [id])
+  childRuns       AgentRun[]      @relation("SubAgentRuns")
+
+  @@index([agentDefinitionId])
+  @@index([sessionId])
+  @@index([status])
+  @@index([parentAgentRunId])
+}
+
+// ============================================================================
+// User Agent (per-user primary agent binding)
+// ============================================================================
+
+model UserAgent {
+  id                String   @id @default(cuid())
+  userId            String
+  agentDefinitionId String
+  workspacePath     String // relative: users/{userId}/workspace
+  lastSessionId     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentDefinition AgentDefinition @relation(fields: [agentDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, agentDefinitionId])
+}
+
+// ============================================================================
+// Provider Configuration (org-level, one per provider)
+// ============================================================================
+
+model ProviderConfig {
+  id          String   @id @default(cuid())
+  provider    String   @unique // "anthropic", "openai", "zai-coding", "custom-xxx"
+  displayName String // "Anthropic", "OpenAI", "Z.AI Coding Plan"
+  apiKey      String // encrypted at rest (AES-256-GCM)
+  apiBaseUrl  String? // override endpoint
+  isEnabled   Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================================================
+// Channels & Messages
+// ============================================================================
+
+enum ChannelType {
+  whatsapp
+  slack
+  web
+  telegram
+}
+
+model Channel {
+  id               String      @id @default(cuid())
+  type             ChannelType
+  name             String
+  config           Json        @default("{}") // channel-specific configuration
+  isActive         Boolean     @default(true)
+  /// Tool-progress emission mode for this channel. Null falls back to
+  /// the platform default resolved in `tool-progress.ts`. Valid values:
+  /// "off" | "new" | "all" | "verbose".
+  toolProgressMode String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  sessions Session[]
+  tasks    Task[]
+
+  @@index([type])
+}
+
+// ============================================================================
+// Tasks (Scheduled / Cron)
+// ============================================================================
+
+enum TaskStatus {
+  pending
+  running
+  completed
+  failed
+  cancelled
+}
+
+model Task {
+  id                  String      @id @default(cuid())
+  agentDefinitionId   String
+  name                String
+  schedule            Json // CronSchedule: { type, time/interval/expression }
+  prompt              String
+  channelId           String? // optional: deliver output to a channel
+  enabled             Boolean     @default(true)
+  lastRunAt           DateTime?
+  lastStatus          TaskStatus?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  createdByUserId     String?
+  nextRunAt           DateTime?
+  consecutiveFailures Int         @default(0)
+  disabledReason      String?
+  timeoutMs           Int?
+
+  agentDefinition AgentDefinition @relation(fields: [agentDefinitionId], references: [id], onDelete: Cascade)
+  channel         Channel?        @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  taskRuns        TaskRun[]
+  createdByUser   User?           @relation(fields: [createdByUserId], references: [id])
+
+  @@index([enabled, nextRunAt])
+}
+
+model TaskRun {
+  id          String     @id @default(cuid())
+  taskId      String
+  status      TaskStatus @default(pending)
+  output      String?
+  error       String?
+  tokenUsage  Json       @default("{}") // { inputTokens, outputTokens }
+  startedAt   DateTime   @default(now())
+  completedAt DateTime?
+  durationMs  Int?
+
+  task     Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  messages TaskRunMessage[]
+
+  @@index([taskId])
+  @@index([taskId, startedAt])
+}
+
+model TaskRunMessage {
+  id         String   @id @default(cuid())
+  taskRunId  String
+  ordering   Int
+  role       String // 'system' | 'user' | 'assistant' | 'tool'
+  content    String   @db.Text
+  toolCallId String?
+  toolCalls  Json?
+  createdAt  DateTime @default(now())
+
+  taskRun TaskRun @relation(fields: [taskRunId], references: [id], onDelete: Cascade)
+
+  @@index([taskRunId, ordering])
+}
+
+// ============================================================================
+// Sessions
+// ============================================================================
+
+model Session {
+  id                 String    @id @default(cuid())
+  userId             String
+  agentDefinitionId  String
+  channelId          String?
+  topic              String? // conversation topic/title (user-editable)
+  lastConsolidatedAt DateTime? // memory consolidation pointer
+  cachedSystemPrompt String? // populated on first run; reused for subsequent runs (Anthropic prompt-cache enabler)
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentDefinition AgentDefinition  @relation(fields: [agentDefinitionId], references: [id], onDelete: Cascade)
+  channel         Channel?         @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  agentRuns       AgentRun[]
+  sessionMessages SessionMessage[]
+
+  @@index([userId])
+  @@index([userId, isActive])
+}
+
+model SessionMessage {
+  id         String    @id @default(cuid())
+  sessionId  String
+  senderId   String?
+  role       String
+  content    String    @db.Text
+  toolCallId String?
+  toolCalls  Json?
+  ordering   Int
+  createdAt  DateTime  @default(now())
+  archivedAt DateTime?
+  // When true, this message is omitted from the chat-history display endpoint.
+  // Set on intermediate reasoning steps of a non-streamed run so reopened
+  // history mirrors the single combined reply the user saw live. The row is
+  // still persisted in full (needed to reconstruct conversation context).
+  hiddenInHistory Boolean @default(false)
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, ordering])
+  @@index([sessionId, archivedAt])
+}
+
+// ============================================================================
+// Governance — Audit Logs & Token Usage
+// ============================================================================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String // e.g. "wiki.share", "agent.run", "skill.approve"
+  resource   String // e.g. "WikiPage", "AgentRun", "Skill"
+  resourceId String
+  details    Json     @default("{}") // action-specific context
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Append-only: no update/delete routes exist for this model
+  @@index([action])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+}
+
+model TokenUsage {
+  id                  String   @id @default(cuid())
+  agentRunId          String
+  userId              String // for policy-level budget enforcement
+  model               String
+  inputTokens         Int
+  outputTokens        Int
+  totalTokens         Int
+  cacheCreationTokens Int      @default(0) // Anthropic prompt cache writes (charged 1.25× input)
+  cacheReadTokens     Int      @default(0) // Anthropic prompt cache reads (charged 0.1× input)
+  estimatedCostUsd    Float    @default(0)
+  createdAt           DateTime @default(now())
+
+  @@index([userId])
+  @@index([model])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// Memory System — Groups, Items, Shares, Notifications
+// ============================================================================
+
+model Group {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  createdById String
+  createdAt   DateTime  @default(now())
+  // Soft-delete marker. Repositories filter `deletedAt IS NULL` on every
+  // read; deleteGroup sets it (and revokes the corresponding WikiShare
+  // rows) so the group's identity survives for audit + future
+  // shared-workspace recovery.
+  deletedAt   DateTime?
+
+  members    GroupMember[]
+  wikiShares WikiShare[]
+  invites    GroupInvite[]
+
+  @@index([deletedAt])
+}
+
+enum GroupMemberRole {
+  OWNER
+  MEMBER
+}
+
+model GroupMember {
+  groupId  String
+  userId   String
+  role     GroupMemberRole @default(MEMBER)
+  joinedAt DateTime        @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, userId])
+  @@index([userId])
+}
+
+enum GroupInviteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  REVOKED
+}
+
+model GroupInvite {
+  id          String            @id @default(cuid())
+  groupId     String
+  inviteeId   String
+  invitedById String
+  status      GroupInviteStatus @default(PENDING)
+  reviewedAt  DateTime?
+  createdAt   DateTime          @default(now())
+
+  group     Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  invitee   User  @relation("GroupInviteInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+  invitedBy User  @relation("GroupInviteInvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([inviteeId, status])
+  @@index([groupId, status])
+  @@index([invitedById])
+}
+
+model WikiPage {
+  id        String    @id @default(cuid())
+  ownerId   String
+  title     String
+  slug      String
+  summary   String
+  content   String // markdown body (≤10000 chars enforced at app layer)
+  tags      String[]
+  scope     WikiScope @default(ARCHIVED)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  owner     User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  shares    WikiShare[]
+  linksFrom WikiLink[]  @relation("LinksFrom")
+  linksTo   WikiLink[]  @relation("LinksTo")
+
+  @@unique([ownerId, slug])
+  @@index([ownerId, scope])
+  @@index([ownerId, updatedAt])
+  @@index([tags], type: Gin, map: "wiki_page_tags")
+  // wiki_page_content_trgm, wiki_page_title_trgm, wiki_page_tsv: Prisma-unmanaged GIN indexes
+  // added via migration SQL (gin_trgm_ops / to_tsvector not expressible in Prisma DSL v7)
+  @@map("WikiPage")
+}
+
+enum WikiScope {
+  AMBIENT
+  ARCHIVED
+}
+
+model WikiLink {
+  id         String   @id @default(cuid())
+  fromPageId String
+  toPageId   String
+  fromPage   WikiPage @relation("LinksFrom", fields: [fromPageId], references: [id], onDelete: Cascade)
+  toPage     WikiPage @relation("LinksTo", fields: [toPageId], references: [id], onDelete: Cascade)
+
+  @@unique([fromPageId, toPageId])
+  @@index([toPageId])
+}
+
+enum ShareTarget {
+  GROUP
+  ORG
+}
+
+model WikiShare {
+  id         String      @id @default(cuid())
+  pageId     String
+  sharedBy   String?
+  targetType ShareTarget
+  groupId    String?
+  sharedAt   DateTime    @default(now())
+  revokedAt  DateTime?
+  isRevoked  Boolean     @default(false)
+
+  page         WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  group        Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  sharedByUser User?    @relation("WikiSharedBy", fields: [sharedBy], references: [id], onDelete: SetNull)
+
+  @@index([pageId, isRevoked])
+  @@index([groupId, isRevoked])
+  @@index([sharedBy])
+  @@map("WikiShare")
+}
+
+enum NotificationType {
+  MEMORY_SHARED
+  MEMORY_REVOKED
+  GROUP_INVITE
+  GROUP_INVITE_RESPONSE
+  PRIMARY_AGENT_ASSIGNED
+  MCP_SERVER_ATTENTION
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  recipientId String
+  type        NotificationType
+  payload     Json // { memoryItemId, shareId, sharedBy, groupId, ... }
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  recipient User @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId])
+  @@index([recipientId, isRead])
+}
+
+// ============================================================================
+// System Settings (single-row, JSON + Zod)
+// ============================================================================
+
+model SystemSettings {
+  id        String   @id @default("default")
+  name      String   @default("Clawix")
+  slug      String   @unique @default("clawix")
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================================
+// MCP (Model Context Protocol) Adapter
+// ============================================================================
+
+enum McpTransport {
+  http
+  sse
+}
+
+enum McpAuthType {
+  none
+  header
+  oauth // reserved for v2 (OAuth phase) — not accepted by v1 API
+}
+
+enum McpConnectionStatus {
+  active
+  disabled // user-set, user-reversible
+  error
+  reauth_required // v2 (OAuth) — reserved
+}
+
+/// Admin-imported, org-global MCP server definition (metadata only).
+model McpServer {
+  id                  String       @id @default(cuid())
+  slug                String       @unique // tool-name namespace: mcp__<slug>__<tool>
+  name                String
+  enabled             Boolean      @default(true) // admin kill switch (org-wide)
+  transportType       McpTransport @default(http)
+  url                 String
+  authType            McpAuthType  @default(none)
+  authHeaderName      String? // e.g. "Authorization"
+  credentialFormat    String? // UI hint, e.g. "Bearer {token}"
+  // OAuth config (authType=oauth) — admin sets these at import; client secret encrypted.
+  oauthAuthorizeUrl    String?
+  oauthTokenUrl        String?
+  oauthScopes          String?
+  oauthClientId        String?
+  oauthClientSecretEnc String?
+  // Spec-native discovery (RFC 9728/8414/7591). When oauthAutoDiscover is true the
+  // authorize/token URLs + scopes (+ a DCR-registered client) are discovered from
+  // the server on first connect and cached into the columns above; oauthResource is
+  // the RFC 8707 canonical resource indicator; oauthDiscoveredAt marks the cache.
+  oauthAutoDiscover    Boolean      @default(false)
+  oauthResource        String?
+  oauthDiscoveredAt    DateTime?
+  setupInstructionsMd String       @default("")
+  createdByUserId     String
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  connections McpConnection[]
+}
+
+/// Per-connection, per-user cached tool catalog (discovered with the user's token).
+model McpTool {
+  id              String        @id @default(cuid())
+  mcpConnectionId String
+  connection      McpConnection @relation(fields: [mcpConnectionId], references: [id], onDelete: Cascade)
+  name            String
+  description     String
+  inputSchema     Json
+  scanFlagged     Boolean       @default(false) // description failed prompt-injection scan
+  scanReason      String?
+  createdAt       DateTime      @default(now())
+
+  @@unique([mcpConnectionId, name])
+}
+
+/// A user's personal link to an imported server, holding THEIR credential + catalog.
+model McpConnection {
+  id               String              @id @default(cuid())
+  mcpServerId      String
+  server           McpServer           @relation(fields: [mcpServerId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialEnc    String? // AES-256-GCM; null for authType=none servers
+  status           McpConnectionStatus @default(active)
+  lastError        String?
+  lastDiscoveredAt DateTime?
+  tiers            Json? // { recommended: string[], optional: string[], off: string[] } — null until set
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  tools      McpTool[]
+  oauthToken McpOAuthToken?
+
+  @@unique([mcpServerId, userId])
+  @@index([userId])
+}
+
+/// Per-connection encrypted OAuth tokens (authType=oauth). One row per connection.
+model McpOAuthToken {
+  mcpConnectionId String        @id
+  connection      McpConnection @relation(fields: [mcpConnectionId], references: [id], onDelete: Cascade)
+  accessTokenEnc  String
+  refreshTokenEnc String?
+  expiresAt       DateTime
+  scope           String
+  lastRefreshedAt DateTime?
+}

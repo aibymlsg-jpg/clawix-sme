@@ -1,0 +1,89 @@
+{
+  "id": "property-mgmt",
+  "name": "Property Management",
+  "icon": "🏢",
+  "color": "#7c9ef5",
+  "description": "Maintenance fault logging and routing, contractor assignment, tenant communication drafts, and service charge reconciliation for small property management firms. Tenant messages and work orders are drafts until you approve them.",
+  "tags": ["property", "facilities", "maintenance", "management", "tenants", "sme"],
+  "skills": ["property-mgmt-shared", "fault-routing", "service-charge-recon"],
+  "agents": [
+    {
+      "name": "pm-coordinator",
+      "role": "primary",
+      "model": "claude-sonnet-4-6",
+      "description": "Triages incoming issues and routes to fault handling or finance. Holds the building, unit, and contractor context.",
+      "skills": ["property-mgmt-shared", "fault-routing", "service-charge-recon"]
+    },
+    {
+      "name": "fault-logger",
+      "role": "worker",
+      "model": "claude-sonnet-4-6",
+      "description": "Logs maintenance faults, classifies urgency, and prepares the routing and tenant-notice drafts.",
+      "skills": ["property-mgmt-shared", "fault-routing"]
+    },
+    {
+      "name": "contractor-match",
+      "role": "worker",
+      "model": "claude-sonnet-4-6",
+      "description": "Matches a fault to the approved contractor list, drafts the work order, and tracks completion.",
+      "skills": ["property-mgmt-shared", "fault-routing"]
+    },
+    {
+      "name": "charge-reconciler",
+      "role": "worker",
+      "model": "claude-sonnet-4-6",
+      "description": "Reconciles service charge receipts against budgets, flags shortfalls, and drafts the annual statement.",
+      "skills": ["property-mgmt-shared", "service-charge-recon"]
+    }
+  ],
+  "subagents": [
+    {
+      "name": "urgency-classifier",
+      "model": "claude-haiku-4-5",
+      "description": "Scores a reported fault as emergency / urgent / routine against safety rules."
+    },
+    {
+      "name": "tenant-notify",
+      "model": "claude-haiku-4-5",
+      "description": "Drafts the tenant notification in a clear, courteous tone — held for approval before sending."
+    },
+    {
+      "name": "deadline-watcher",
+      "model": "claude-haiku-4-5",
+      "description": "Daily cron check on open work orders and contractor SLAs; surfaces anything overdue."
+    }
+  ],
+  "governance": {
+    "humanInLoopActions": [
+      "email.send",
+      "sms.send",
+      "work_order.dispatch",
+      "doc.export_pdf_docx",
+      "email.create_draft"
+    ],
+    "guardrails": [
+      "Tenant communications and work orders are drafts until a person approves them",
+      "Only contractors on the approved list may be assigned — no ad-hoc vendors",
+      "Emergency-classified faults are surfaced immediately and never queued silently",
+      "Tenant personal data stored under /workspace/<building>/units/ — not in memory"
+    ]
+  },
+  "inspirations": [
+    {
+      "title": "Log a fault",
+      "prompt": "Tenant at Block C, Flat 8 reports a burst pipe under the kitchen sink. Log it, classify the urgency, propose a contractor from my list, and draft the notice to the tenant."
+    },
+    {
+      "title": "Assign a contractor",
+      "prompt": "Assign the Block C plumbing job to a contractor, draft the work order with scope and access details, and set a follow-up for completion."
+    },
+    {
+      "title": "Service charge reconciliation",
+      "prompt": "Reconcile this quarter's service charge receipts against the budget for Garden Court. Flag any overspend and draft a short note for the owners."
+    },
+    {
+      "title": "Open issues digest",
+      "prompt": "Give me a digest of all open maintenance issues across my buildings, sorted by urgency, with anything past its SLA highlighted."
+    }
+  ]
+}
