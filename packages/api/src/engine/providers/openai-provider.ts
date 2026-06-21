@@ -48,6 +48,8 @@ export class OpenAIProvider implements LLMProvider {
     this.client = new OpenAI({
       apiKey,
       ...(baseURL ? { baseURL } : {}),
+      timeout: 120_000, // 2 minute per-request timeout
+      maxRetries: 0, // retries are handled by the engine's recovery loop
     });
   }
 

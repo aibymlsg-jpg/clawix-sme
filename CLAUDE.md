@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What Clawix is
 
-Clawix is a self-hosted, single-org, multi-agent AI orchestration platform. LLM-backed agents run inside isolated Docker containers and are reached through messaging channels (web WebSocket, Telegram, WhatsApp). A **primary agent** per user coordinates work and can **spawn sub-agents** (workers) to run focused tasks in parallel. The platform ships with industry "packs" (Finance, Legal, NGO, Construction) made of skills + a pack manifest. Read `docs/SPEC.md` for the authoritative architecture; `docs/AGENTS.md`, `docs/SKILLS.md`, `docs/MEMORY.md`, `docs/GOVERNANCE.md`, `docs/PROVIDERS.md`, `docs/CONFIG.md` cover subsystems in depth.
+Clawix is a self-hosted, single-org, multi-agent AI orchestration platform. LLM-backed agents run inside isolated Docker containers and are reached through messaging channels (web WebSocket, Telegram, WhatsApp). A **primary agent** per user coordinates work and can **spawn sub-agents** (workers) to run focused tasks in parallel. The platform ships with industry "packs" made of skills + a pack manifest — currently 7, spanning finance, legal, NGO, home-build/construction, property management, property agency, and restaurant/F&B (`skills/packs/*.json`). Read `docs/SPEC.md` for the authoritative architecture; `docs/AGENTS.md`, `docs/SKILLS.md`, `docs/MEMORY.md`, `docs/GOVERNANCE.md`, `docs/PROVIDERS.md`, `docs/CONFIG.md`, `docs/MULTI-USERS.md`, `docs/SECURITY.md` cover subsystems in depth (`docs/README.md` is the index).
+
+This fork is the **Clawix SME** flavor: `SME_Layout_Spec.md` at the repo root is the design/build spec for the SME marketing + landing surface (`packages/web/src/components/landing/sme/`, `lib/sme-data.ts`) and the five named domain agents below — read it before touching either.
 
 ## Monorepo layout
 
@@ -96,7 +98,8 @@ Prisma schema at `packages/api/prisma/schema.prisma` (Postgres via `@prisma/adap
 ## Skills & Packs
 
 - **Skills** live in `skills/builtin/<name>/SKILL.md` (loaded by `engine/skill-loader.service.ts`). Format reference: `reference/SKILL`, docs in `docs/SKILLS.md`.
-- **Packs** are JSON manifests in `skills/packs/<industry>.json` (name, icon, agents, inspirations). Adding a pack needs no code — drop the skill folders + manifest and restart; the Explore page picks them up.
+- **Packs** are JSON manifests in `skills/packs/<industry>.json` (id, name, icon, skills, `agents`/`subagents`, `governance`, `inspirations`). Adding a pack needs no code — drop the skill folders + manifest and restart; the Explore page picks them up.
+- **SME domain agents** — `packages/api/src/domain-agents.ts` defines one named `primary` `AgentDefinition` for 5 of the 7 packs (Accounts Assistant, Property Assistant, Restaurant Operations Assistant, Builder Assistant, Estate Agency Assistant — fin/property-mgmt/restaurant/builder/property-agency; legal and ngo define their primaries inline in the pack manifest instead). `bootstrap.ts` seeds them idempotently (created only if a primary of that name is missing); also creatable live via `POST /agents`. Specialization lives entirely in the system prompt — the skill loader exposes every file skill to every agent, so the prompt is what tells each one which skills to reach for.
 
 ## Conventions
 
