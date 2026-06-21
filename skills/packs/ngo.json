@@ -54,8 +54,10 @@
   "subagents": [],
   "governance": {
     "humanInLoopActions": [
-      "send_donor_communication", "submit_grant_proposal",
-      "publish_beneficiary_story", "share_beneficiary_data_externally",
+      "send_donor_communication",
+      "submit_grant_proposal",
+      "publish_beneficiary_story",
+      "share_beneficiary_data_externally",
       "sign_partner_agreement"
     ],
     "guardrails": [

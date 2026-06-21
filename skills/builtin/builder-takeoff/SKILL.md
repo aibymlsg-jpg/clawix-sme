@@ -68,17 +68,17 @@ Goes in `/workspace/<project>/plant.csv`, same schema as `bom.csv` but `unit` is
 
 ### Where to look (UK)
 
-| Counter             | Best for                                   | Account benefit                          |
-| ------------------- | ------------------------------------------ | ---------------------------------------- |
-| Travis Perkins      | Heavy materials, timber, insulation        | Trade account = ~10–15 % off list        |
-| Jewson              | Same range as TP, often better in N England| Trade account                            |
-| MKM                 | Mixed; strong in groundworks               | Trade account                            |
-| Selco               | Cash-and-carry, fast pickup                | Trade card; lower margin                 |
-| Howdens             | Kitchens, doors, flooring                  | Trade-only; pricing on application       |
-| Wickes              | Mid-range materials, retail-priced         | Trade discount card                      |
-| Screwfix / Toolstation | Consumables, tools, electrical, plumbing | Click-and-collect 1 minute               |
-| CEF / Edmundson / Rexel | Electrical wholesale                  | Trade only                               |
-| Plumb Center / Wolseley | Plumbing wholesale                    | Trade only                               |
+| Counter                 | Best for                                    | Account benefit                    |
+| ----------------------- | ------------------------------------------- | ---------------------------------- |
+| Travis Perkins          | Heavy materials, timber, insulation         | Trade account = ~10–15 % off list  |
+| Jewson                  | Same range as TP, often better in N England | Trade account                      |
+| MKM                     | Mixed; strong in groundworks                | Trade account                      |
+| Selco                   | Cash-and-carry, fast pickup                 | Trade card; lower margin           |
+| Howdens                 | Kitchens, doors, flooring                   | Trade-only; pricing on application |
+| Wickes                  | Mid-range materials, retail-priced          | Trade discount card                |
+| Screwfix / Toolstation  | Consumables, tools, electrical, plumbing    | Click-and-collect 1 minute         |
+| CEF / Edmundson / Rexel | Electrical wholesale                        | Trade only                         |
+| Plumb Center / Wolseley | Plumbing wholesale                          | Trade only                         |
 
 ### Sourcing rules
 
@@ -136,18 +136,18 @@ Customer decisions go on the schedule too — "Week 4: customer must have select
 
 Default UK day rates (confirm with the user — these vary regionally):
 
-| Trade            | Day rate (GBP) | Notes                                              |
-| ---------------- | -------------- | -------------------------------------------------- |
-| Labourer         | 150–180        |                                                    |
-| Carpenter        | 220–280        | First-fix lower end, second-fix top end            |
-| Plasterer        | 250–300        | + skimming work in m² for piecework jobs           |
-| Tiler            | 220–300        | + £/m² for large bathrooms                         |
-| Painter          | 180–230        |                                                    |
-| Electrician      | 280–350        | + Part P certification work charged separately     |
-| Plumber          | 280–350        |                                                    |
-| Bricklayer       | 250–300        | + £/1000 for piecework                             |
-| Groundworker     | 220–280        |                                                    |
-| Site manager     | 300–400        | Often the user themselves on small jobs            |
+| Trade        | Day rate (GBP) | Notes                                          |
+| ------------ | -------------- | ---------------------------------------------- |
+| Labourer     | 150–180        |                                                |
+| Carpenter    | 220–280        | First-fix lower end, second-fix top end        |
+| Plasterer    | 250–300        | + skimming work in m² for piecework jobs       |
+| Tiler        | 220–300        | + £/m² for large bathrooms                     |
+| Painter      | 180–230        |                                                |
+| Electrician  | 280–350        | + Part P certification work charged separately |
+| Plumber      | 280–350        |                                                |
+| Bricklayer   | 250–300        | + £/1000 for piecework                         |
+| Groundworker | 220–280        |                                                |
+| Site manager | 300–400        | Often the user themselves on small jobs        |
 
 For each crew member, multiply day rate × days on site (from the schedule). Record the assumption — the user can override per project.
 

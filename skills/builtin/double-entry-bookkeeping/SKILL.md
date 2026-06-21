@@ -2,7 +2,7 @@
 name: double-entry-bookkeeping
 description: Double-entry rules and templated journal-entry patterns the agents use when drafting JEs. Document-type templates (invoice, receipt, accrual, prepayment, depreciation, payroll, FX revaluation, tax remittance) and the "every entry balances, every line cites a source" discipline. Read by bookkeeping, reconciliation, ap-ar, audit, reporting.
 user-invocable: true
-metadata: { "openclaw": { "always": false, "emoji": "⚖️" } }
+metadata: { 'openclaw': { 'always': false, 'emoji': '⚖️' } }
 ---
 
 # The discipline
@@ -10,7 +10,7 @@ metadata: { "openclaw": { "always": false, "emoji": "⚖️" } }
 1. Every entry balances. Debits = credits.
 2. Every line cites the source-doc path and hash.
 3. Every entry is dated to the economic-event date, not today.
-4. Every entry has a one-line memo that describes *what happened*, not *what it is*.
+4. Every entry has a one-line memo that describes _what happened_, not _what it is_.
 5. Above-materiality entries include a one-paragraph rationale.
 
 ## Default JE templates
@@ -19,11 +19,11 @@ The agent uses these templates; if a transaction does not fit, it writes a codin
 
 ### Vendor invoice (purchase of services or goods, with input VAT)
 
-| dr/cr | account | rule |
-|---|---|---|
-| dr | expense / asset | net amount, by chart classification |
-| dr | input-VAT recoverable | recoverable portion |
-| cr | accounts payable | gross amount, with vendor sub-ledger |
+| dr/cr | account               | rule                                 |
+| ----- | --------------------- | ------------------------------------ |
+| dr    | expense / asset       | net amount, by chart classification  |
+| dr    | input-VAT recoverable | recoverable portion                  |
+| cr    | accounts payable      | gross amount, with vendor sub-ledger |
 
 ### Customer invoice (sale, with output VAT)
 
@@ -36,7 +36,7 @@ The agent uses these templates; if a transaction does not fit, it writes a codin
 | dr | bank | amount received |
 | cr | accounts receivable | matching open invoice(s) |
 
-If the receipt covers multiple invoices, *propose* the allocation; do not finalise without confirmation.
+If the receipt covers multiple invoices, _propose_ the allocation; do not finalise without confirmation.
 
 ### Vendor payment (cash out)
 

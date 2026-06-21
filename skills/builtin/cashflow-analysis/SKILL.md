@@ -2,7 +2,7 @@
 name: cashflow-analysis
 description: How the firm builds the daily cash position and the 13-week rolling forecast. Driver-based forecasting, probability weighting from collection history, stress scenarios, variance analysis after the week. Read by cashflow, reporting.
 user-invocable: true
-metadata: { "openclaw": { "always": false, "emoji": "💧" } }
+metadata: { 'openclaw': { 'always': false, 'emoji': '💧' } }
 ---
 
 # Two artifacts, two purposes

@@ -10,12 +10,24 @@ describe('AgentRunRegistry', () => {
     },
   };
 
+  const mockContainerPool = {
+    evict: vi.fn().mockResolvedValue(undefined),
+  };
+
+  const mockContainerRunner = {
+    stop: vi.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   function create(): AgentRunRegistry {
-    return new AgentRunRegistry(mockPrisma as never);
+    return new AgentRunRegistry(
+      mockPrisma as never,
+      mockContainerPool as never,
+      mockContainerRunner as never,
+    );
   }
 
   it('register stores the controller and abort fires its signal', () => {
@@ -92,5 +104,64 @@ describe('AgentRunRegistry', () => {
     const result = await registry.abortAllForUser('user-1');
 
     expect(result.stopped).toBe(1);
+  });
+
+  it('forceStopContainer evicts the pool entry for pool-managed runs', async () => {
+    const registry = create();
+    registry.attachContainer('run-1', {
+      containerId: 'c-1',
+      sessionId: 'session-1',
+      usePool: true,
+    });
+
+    await registry.forceStopContainer('run-1');
+
+    expect(mockContainerPool.evict).toHaveBeenCalledWith('session-1');
+    expect(mockContainerRunner.stop).not.toHaveBeenCalled();
+  });
+
+  it('forceStopContainer stops the container directly for non-pooled runs', async () => {
+    const registry = create();
+    registry.attachContainer('run-1', { containerId: 'c-1', sessionId: null, usePool: false });
+
+    await registry.forceStopContainer('run-1');
+
+    expect(mockContainerRunner.stop).toHaveBeenCalledWith('c-1');
+    expect(mockContainerPool.evict).not.toHaveBeenCalled();
+  });
+
+  it('forceStopContainer is a no-op when no container was ever attached', async () => {
+    const registry = create();
+
+    await registry.forceStopContainer('unknown-run');
+
+    expect(mockContainerPool.evict).not.toHaveBeenCalled();
+    expect(mockContainerRunner.stop).not.toHaveBeenCalled();
+  });
+
+  it('forceStopContainer swallows errors from the underlying stop/evict call', async () => {
+    const registry = create();
+    registry.attachContainer('run-1', {
+      containerId: 'c-1',
+      sessionId: 'session-1',
+      usePool: true,
+    });
+    mockContainerPool.evict.mockRejectedValueOnce(new Error('docker error'));
+
+    await expect(registry.forceStopContainer('run-1')).resolves.toBeUndefined();
+  });
+
+  it('unregister also clears the attached container handle', async () => {
+    const registry = create();
+    registry.attachContainer('run-1', {
+      containerId: 'c-1',
+      sessionId: 'session-1',
+      usePool: true,
+    });
+    registry.unregister('run-1');
+
+    await registry.forceStopContainer('run-1');
+
+    expect(mockContainerPool.evict).not.toHaveBeenCalled();
   });
 });

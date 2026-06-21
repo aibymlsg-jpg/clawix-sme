@@ -27,7 +27,10 @@ export const sendVerificationSchema = z.object({
 
 export const verifyEmailSchema = z.object({
   email: z.string().email('Invalid email address'),
-  code: z.string().length(6, 'Code must be 6 digits').regex(/^\d{6}$/, 'Digits only'),
+  code: z
+    .string()
+    .length(6, 'Code must be 6 digits')
+    .regex(/^\d{6}$/, 'Digits only'),
 });
 
 export const confirmPaymentSchema = z.object({

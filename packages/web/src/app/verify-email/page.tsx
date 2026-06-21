@@ -19,27 +19,33 @@ export default function VerifyEmailPage() {
 }
 
 function VerifyEmailForm() {
-  const router       = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const email        = searchParams.get('email') ?? '';
+  const email = searchParams.get('email') ?? '';
   const { t } = useLanguage();
 
-  const [digits, setDigits]       = useState<string[]>(Array(6).fill(''));
-  const [error, setError]         = useState('');
+  const [digits, setDigits] = useState<string[]>(Array(6).fill(''));
+  const [error, setError] = useState('');
   const [isVerifying, setVerifying] = useState(false);
   const [isResending, setResending] = useState(false);
-  const [cooldown, setCooldown]   = useState(0);
+  const [cooldown, setCooldown] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Countdown timer for resend cooldown
   useEffect(() => {
     if (cooldown <= 0) return;
-    const t = setInterval(() => { setCooldown((c) => Math.max(0, c - 1)); }, 1000);
-    return () => { clearInterval(t); };
+    const t = setInterval(() => {
+      setCooldown((c) => Math.max(0, c - 1));
+    }, 1000);
+    return () => {
+      clearInterval(t);
+    };
   }, [cooldown]);
 
   // Focus first box on mount
-  useEffect(() => { inputRefs.current[0]?.focus(); }, []);
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
 
   const code = digits.join('');
 
@@ -70,7 +76,10 @@ function VerifyEmailForm() {
   }
 
   async function handleVerify() {
-    if (code.length < 6) { setError(t('verify.enterAll')); return; }
+    if (code.length < 6) {
+      setError(t('verify.enterAll'));
+      return;
+    }
     setError('');
     setVerifying(true);
     try {
@@ -83,18 +92,26 @@ function VerifyEmailForm() {
       rememberAccessToken(res.accessToken);
 
       // Kick off droplet provisioning with the stored plan
-      const plan           = sessionStorage.getItem('droplet_plan') ?? '';
-      const region         = sessionStorage.getItem('droplet_region') ?? 'sgp1';
-      const ssh            = sessionStorage.getItem('droplet_ssh') ?? '';
+      const plan = sessionStorage.getItem('droplet_plan') ?? '';
+      const region = sessionStorage.getItem('droplet_region') ?? 'sgp1';
+      const ssh = sessionStorage.getItem('droplet_ssh') ?? '';
       const servicePackage = sessionStorage.getItem('service_package') ?? undefined;
-      const serviceField   = sessionStorage.getItem('service_field') ?? undefined;
+      const serviceField = sessionStorage.getItem('service_field') ?? undefined;
 
       if (plan && ssh) {
         apiFetch('/droplets', {
           method: 'POST',
           accessToken: res.accessToken,
-          body: JSON.stringify({ size: plan, region, sshPublicKey: ssh, servicePackage, serviceField }),
-        }).catch(() => { /* provisioning failure won't block flow */ });
+          body: JSON.stringify({
+            size: plan,
+            region,
+            sshPublicKey: ssh,
+            servicePackage,
+            serviceField,
+          }),
+        }).catch(() => {
+          /* provisioning failure won't block flow */
+        });
       }
 
       // AI Agent Training path: the viewer account is now verified — send a
@@ -104,7 +121,9 @@ function VerifyEmailForm() {
         apiFetch('/auth/send-welcome', {
           method: 'POST',
           body: JSON.stringify({ email }),
-        }).catch(() => { /* email failure won't block flow */ });
+        }).catch(() => {
+          /* email failure won't block flow */
+        });
       }
 
       // Navigate to payment page with the signed token
@@ -168,13 +187,19 @@ function VerifyEmailForm() {
             {digits.map((d, i) => (
               <input
                 key={i}
-                ref={(el) => { inputRefs.current[i] = el; }}
+                ref={(el) => {
+                  inputRefs.current[i] = el;
+                }}
                 type="text"
                 inputMode="numeric"
                 maxLength={1}
                 value={d}
-                onChange={(e) => { handleDigitChange(i, e.target.value); }}
-                onKeyDown={(e) => { handleKeyDown(i, e); }}
+                onChange={(e) => {
+                  handleDigitChange(i, e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  handleKeyDown(i, e);
+                }}
                 disabled={isVerifying}
                 className={`size-12 rounded-lg border text-center text-xl font-bold
                   bg-background transition-all outline-none
@@ -185,16 +210,16 @@ function VerifyEmailForm() {
             ))}
           </div>
 
-          {error && (
-            <p className="mb-4 text-center text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="mb-4 text-center text-sm text-destructive">{error}</p>}
 
           {/* Verify button */}
           <Button
             className="w-full"
             size="lg"
             disabled={code.length < 6 || isVerifying}
-            onClick={() => { void handleVerify(); }}
+            onClick={() => {
+              void handleVerify();
+            }}
           >
             {isVerifying && <Loader2 className="mr-2 size-4 animate-spin" />}
             {t('verify.verify')}
@@ -206,14 +231,22 @@ function VerifyEmailForm() {
             <button
               type="button"
               disabled={cooldown > 0 || isResending}
-              onClick={() => { void handleResend(); }}
+              onClick={() => {
+                void handleResend();
+              }}
               className="flex items-center gap-1 font-medium text-primary disabled:cursor-not-allowed disabled:opacity-50 hover:underline"
             >
-              {isResending
-                ? <><Loader2 className="size-3 animate-spin" /> {t('verify.sending')}</>
-                : cooldown > 0
-                  ? t('verify.resendIn', { seconds: cooldown })
-                  : <><RefreshCw className="size-3" /> {t('verify.resend')}</>}
+              {isResending ? (
+                <>
+                  <Loader2 className="size-3 animate-spin" /> {t('verify.sending')}
+                </>
+              ) : cooldown > 0 ? (
+                t('verify.resendIn', { seconds: cooldown })
+              ) : (
+                <>
+                  <RefreshCw className="size-3" /> {t('verify.resend')}
+                </>
+              )}
             </button>
           </div>
 

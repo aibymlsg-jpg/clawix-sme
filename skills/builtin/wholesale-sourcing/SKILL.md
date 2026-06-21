@@ -42,16 +42,16 @@ If any of (1)–(3) is missing, ask the user once, then stop. Don't guess locati
 
 Each row in the BoM belongs to one of these procurement domains. Group them in `/workspace/<project>/sourcing/by-domain.md`:
 
-| Domain               | Typical content                                                                           | Default merchants (UK)                                   |
-| -------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `heavy-build`        | Timber, plasterboard, insulation, sand, cement, aggregate, bricks, blocks                 | Travis Perkins, Jewson, MKM, Selco                       |
-| `electrical-trade`   | Cable, back-boxes, consumer units, MCBs, conduit, dado, fittings                          | CEF, Edmundson Electrical, Rexel, City Electrical Wholesalers |
-| `plumbing-trade`     | Pipe (copper, plastic, MDPE), fittings, valves, manifolds, soil pipe, traps               | Plumb Center, Wolseley, Williams, Plumbase               |
-| `kitchen-bathroom`   | Kitchen carcasses + doors, worktops, sanitaryware, taps, showers, splashbacks             | Howdens, Magnet, Wren Trade, B&Q TradePoint              |
-| `decor-finishes`     | Paint, fillers, sandpaper, masking tape, sealants                                         | Brewers, Dulux Decorator Centre, Crown Decorating Centre |
-| `consumables-fast`   | Screws, fixings, drill bits, gloves, dust sheets, PPE, low-cost hand tools                | Screwfix, Toolstation (click-and-collect 1 min)          |
-| `tool-hire`          | Skip, scaffold, breaker, dehumidifier, plate compactor, mixer                             | HSS Hire, Speedy, Brandon Hire (and local independents)  |
-| `specialist`         | Stone, bespoke joinery, structural steel, glass, smart-home hubs, AV, EV chargers, ASHP   | Project-specific — record per row                        |
+| Domain             | Typical content                                                                         | Default merchants (UK)                                        |
+| ------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `heavy-build`      | Timber, plasterboard, insulation, sand, cement, aggregate, bricks, blocks               | Travis Perkins, Jewson, MKM, Selco                            |
+| `electrical-trade` | Cable, back-boxes, consumer units, MCBs, conduit, dado, fittings                        | CEF, Edmundson Electrical, Rexel, City Electrical Wholesalers |
+| `plumbing-trade`   | Pipe (copper, plastic, MDPE), fittings, valves, manifolds, soil pipe, traps             | Plumb Center, Wolseley, Williams, Plumbase                    |
+| `kitchen-bathroom` | Kitchen carcasses + doors, worktops, sanitaryware, taps, showers, splashbacks           | Howdens, Magnet, Wren Trade, B&Q TradePoint                   |
+| `decor-finishes`   | Paint, fillers, sandpaper, masking tape, sealants                                       | Brewers, Dulux Decorator Centre, Crown Decorating Centre      |
+| `consumables-fast` | Screws, fixings, drill bits, gloves, dust sheets, PPE, low-cost hand tools              | Screwfix, Toolstation (click-and-collect 1 min)               |
+| `tool-hire`        | Skip, scaffold, breaker, dehumidifier, plate compactor, mixer                           | HSS Hire, Speedy, Brandon Hire (and local independents)       |
+| `specialist`       | Stone, bespoke joinery, structural steel, glass, smart-home hubs, AV, EV chargers, ASHP | Project-specific — record per row                             |
 
 Region overrides:
 
@@ -122,10 +122,10 @@ RFQ template:
 
 ## Items
 
-| Line | SKU / spec        | Description                  | Unit | Qty | Notes                                |
-|------|-------------------|------------------------------|------|-----|--------------------------------------|
-| 1    | <sku or spec>     | <plain English>              | each | 4   | <finish, colour, model variant>      |
-| ...  | ...               | ...                          | ...  | ... | ...                                  |
+| Line | SKU / spec    | Description     | Unit | Qty | Notes                           |
+| ---- | ------------- | --------------- | ---- | --- | ------------------------------- |
+| 1    | <sku or spec> | <plain English> | each | 4   | <finish, colour, model variant> |
+| ...  | ...           | ...             | ...  | ... | ...                             |
 
 ## Asks
 
@@ -155,23 +155,25 @@ Currency: <GBP / USD / EUR>
 ## By merchant
 
 ### Travis Perkins — account 4XXXXX1
-- Order by: <date>  (lead 5 days; site needs by <date>)
+
+- Order by: <date> (lead 5 days; site needs by <date>)
 - Lines: 18
 - Sub-total at list: £X
 - Sub-total at trade (12 % off): £Y
 - Delivery: £Z (estimated)
 
 ### Jewson — no account
-- Order by: <date>  ...
+
+- Order by: <date> ...
 
 (repeat per merchant)
 
 ## By stage (cross-reference to schedule.md)
 
-| Stage  | Merchant         | Delivery window     | Status         |
-|--------|------------------|---------------------|----------------|
-| STG-04 | Travis Perkins   | Week 2, Mon–Tue     | Order pending  |
-| STG-05 | Jewson           | Week 3, Wed         | Order pending  |
+| Stage  | Merchant       | Delivery window | Status        |
+| ------ | -------------- | --------------- | ------------- |
+| STG-04 | Travis Perkins | Week 2, Mon–Tue | Order pending |
+| STG-05 | Jewson         | Week 3, Wed     | Order pending |
 
 ## Cash-flow effect
 

@@ -12,6 +12,7 @@ const mockPrisma = {
 
 const mockRegistry = {
   abort: vi.fn().mockReturnValue(true),
+  forceStopContainer: vi.fn().mockResolvedValue(undefined),
 };
 
 describe('StaleRunReaperService', () => {
@@ -64,6 +65,29 @@ describe('StaleRunReaperService', () => {
 
     expect(result).toBe(0);
     expect(mockRegistry.abort).not.toHaveBeenCalled();
+    expect(mockRegistry.forceStopContainer).not.toHaveBeenCalled();
     expect(mockPrisma.agentRun.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('force-stops the container for each stale run, even if abort() could not unstick it', async () => {
+    mockPrisma.agentRun.findMany.mockResolvedValue([{ id: 'run-1' }, { id: 'run-2' }]);
+    mockPrisma.agentRun.updateMany.mockResolvedValue({ count: 2 });
+
+    await reaper.reapStaleRuns();
+
+    expect(mockRegistry.forceStopContainer).toHaveBeenCalledTimes(2);
+    expect(mockRegistry.forceStopContainer).toHaveBeenCalledWith('run-1');
+    expect(mockRegistry.forceStopContainer).toHaveBeenCalledWith('run-2');
+  });
+
+  it('still flips the DB row to failed even if forceStopContainer rejects', async () => {
+    mockPrisma.agentRun.findMany.mockResolvedValue([{ id: 'run-1' }]);
+    mockPrisma.agentRun.updateMany.mockResolvedValue({ count: 1 });
+    mockRegistry.forceStopContainer.mockRejectedValueOnce(new Error('docker stop failed'));
+
+    const result = await reaper.reapStaleRuns();
+
+    expect(result).toBe(1);
+    expect(mockPrisma.agentRun.updateMany).toHaveBeenCalled();
   });
 });

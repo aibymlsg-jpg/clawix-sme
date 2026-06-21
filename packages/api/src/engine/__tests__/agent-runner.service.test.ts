@@ -385,11 +385,13 @@ function buildMocks() {
   const mockAgentRunRegistry: {
     register: ReturnType<typeof vi.fn>;
     unregister: ReturnType<typeof vi.fn>;
+    attachContainer: ReturnType<typeof vi.fn>;
     abort: ReturnType<typeof vi.fn>;
     abortAllForUser: ReturnType<typeof vi.fn>;
   } = {
     register: vi.fn(),
     unregister: vi.fn(),
+    attachContainer: vi.fn(),
     abort: vi.fn(),
     abortAllForUser: vi.fn(),
   };
@@ -1223,6 +1225,16 @@ describe('AgentRunnerService', () => {
         expect.any(AbortController),
       );
       expect(mocks.mockAgentRunRegistry.unregister).toHaveBeenCalledWith('run-1');
+    });
+
+    it('attaches the container handle so the stale-run reaper can force-stop it later', async () => {
+      await service.run(defaultOptions);
+
+      expect(mocks.mockAgentRunRegistry.attachContainer).toHaveBeenCalledWith('run-1', {
+        containerId: 'container-1',
+        sessionId: 'sess-1',
+        usePool: true,
+      });
     });
 
     it('cancel signal fired before loop runs returns cancelled status', async () => {

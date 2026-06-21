@@ -40,7 +40,8 @@ export function ImagePreview({ path, alt, className }: ImagePreviewProps) {
           URL.revokeObjectURL(objectUrl);
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : t('workspace.errorLoadImage'));
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : t('workspace.errorLoadImage'));
       }
     })();
 

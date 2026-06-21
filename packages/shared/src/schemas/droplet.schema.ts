@@ -2,7 +2,16 @@ import { z } from 'zod';
 
 // Supported DO regions
 export const DO_REGIONS = [
-  'nyc1', 'nyc3', 'sfo3', 'sgp1', 'lon1', 'fra1', 'ams3', 'tor1', 'blr1', 'syd1',
+  'nyc1',
+  'nyc3',
+  'sfo3',
+  'sgp1',
+  'lon1',
+  'fra1',
+  'ams3',
+  'tor1',
+  'blr1',
+  'syd1',
 ] as const;
 
 export const DO_REGION_LABELS: Record<(typeof DO_REGIONS)[number], string> = {
@@ -30,15 +39,87 @@ export interface DropletPlan {
 }
 
 export const DO_DROPLET_PLANS: DropletPlan[] = [
-  { slug: 's-1vcpu-1gb',  memoryGib: 1,  vcpus: 1, ssdGib: 25,  transferTib: 1000,  priceHourly: 0.01042, priceMonthly: 7   },
-  { slug: 's-1vcpu-2gb',  memoryGib: 2,  vcpus: 1, ssdGib: 50,  transferTib: 2000,  priceHourly: 0.02083, priceMonthly: 14  },
-  { slug: 's-2vcpu-2gb',  memoryGib: 2,  vcpus: 2, ssdGib: 60,  transferTib: 3000,  priceHourly: 0.03125, priceMonthly: 21  },
-  { slug: 's-2vcpu-4gb',  memoryGib: 4,  vcpus: 2, ssdGib: 80,  transferTib: 4000,  priceHourly: 0.04167, priceMonthly: 28  },
-  { slug: 's-2vcpu-8gb',  memoryGib: 8,  vcpus: 2, ssdGib: 100, transferTib: 5000,  priceHourly: 0.06250, priceMonthly: 42  },
-  { slug: 's-4vcpu-8gb',  memoryGib: 8,  vcpus: 4, ssdGib: 160, transferTib: 5000,  priceHourly: 0.08333, priceMonthly: 56  },
-  { slug: 's-4vcpu-16gb', memoryGib: 16, vcpus: 4, ssdGib: 200, transferTib: 8000,  priceHourly: 0.12500, priceMonthly: 84  },
-  { slug: 's-8vcpu-16gb', memoryGib: 16, vcpus: 8, ssdGib: 320, transferTib: 6000,  priceHourly: 0.16667, priceMonthly: 112 },
-  { slug: 's-8vcpu-32gb', memoryGib: 32, vcpus: 8, ssdGib: 400, transferTib: 10000, priceHourly: 0.25000, priceMonthly: 168 },
+  {
+    slug: 's-1vcpu-1gb',
+    memoryGib: 1,
+    vcpus: 1,
+    ssdGib: 25,
+    transferTib: 1000,
+    priceHourly: 0.01042,
+    priceMonthly: 7,
+  },
+  {
+    slug: 's-1vcpu-2gb',
+    memoryGib: 2,
+    vcpus: 1,
+    ssdGib: 50,
+    transferTib: 2000,
+    priceHourly: 0.02083,
+    priceMonthly: 14,
+  },
+  {
+    slug: 's-2vcpu-2gb',
+    memoryGib: 2,
+    vcpus: 2,
+    ssdGib: 60,
+    transferTib: 3000,
+    priceHourly: 0.03125,
+    priceMonthly: 21,
+  },
+  {
+    slug: 's-2vcpu-4gb',
+    memoryGib: 4,
+    vcpus: 2,
+    ssdGib: 80,
+    transferTib: 4000,
+    priceHourly: 0.04167,
+    priceMonthly: 28,
+  },
+  {
+    slug: 's-2vcpu-8gb',
+    memoryGib: 8,
+    vcpus: 2,
+    ssdGib: 100,
+    transferTib: 5000,
+    priceHourly: 0.0625,
+    priceMonthly: 42,
+  },
+  {
+    slug: 's-4vcpu-8gb',
+    memoryGib: 8,
+    vcpus: 4,
+    ssdGib: 160,
+    transferTib: 5000,
+    priceHourly: 0.08333,
+    priceMonthly: 56,
+  },
+  {
+    slug: 's-4vcpu-16gb',
+    memoryGib: 16,
+    vcpus: 4,
+    ssdGib: 200,
+    transferTib: 8000,
+    priceHourly: 0.125,
+    priceMonthly: 84,
+  },
+  {
+    slug: 's-8vcpu-16gb',
+    memoryGib: 16,
+    vcpus: 8,
+    ssdGib: 320,
+    transferTib: 6000,
+    priceHourly: 0.16667,
+    priceMonthly: 112,
+  },
+  {
+    slug: 's-8vcpu-32gb',
+    memoryGib: 32,
+    vcpus: 8,
+    ssdGib: 400,
+    transferTib: 10000,
+    priceHourly: 0.25,
+    priceMonthly: 168,
+  },
 ];
 
 export const DO_PLAN_SLUGS = DO_DROPLET_PLANS.map((p) => p.slug) as [string, ...string[]];

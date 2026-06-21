@@ -74,8 +74,10 @@ export default function PreviewPage() {
         {/* Page list */}
         <div className="flex flex-col gap-4">
           {PAGES.map((page) => (
-            <div key={page.href}
-              className="rounded-xl border bg-card p-5 shadow-sm flex items-start justify-between gap-4">
+            <div
+              key={page.href}
+              className="rounded-xl border bg-card p-5 shadow-sm flex items-start justify-between gap-4"
+            >
               <div className="min-w-0">
                 <p className="font-semibold text-sm">{page.title}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">

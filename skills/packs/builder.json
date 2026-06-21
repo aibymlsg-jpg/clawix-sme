@@ -18,7 +18,13 @@
       "role": "primary",
       "model": "claude-sonnet-4-6",
       "description": "Routes jobs to the right specialist. Handles project scaffolding, scope clarification, and cross-role coordination. Reads all five skills.",
-      "skills": ["home-build-shared", "device-install-survey", "builder-takeoff", "designer-spec-pack", "wholesale-sourcing"]
+      "skills": [
+        "home-build-shared",
+        "device-install-survey",
+        "builder-takeoff",
+        "designer-spec-pack",
+        "wholesale-sourcing"
+      ]
     },
     {
       "name": "installer",
@@ -57,18 +63,50 @@
     }
   ],
   "subagents": [
-    { "name": "supplier-pricer",     "model": "claude-haiku-4-5",  "description": "Fetches live prices from named UK/EU/US trade counters via web_fetch. Spawned by wholesale-buyer and quote-builder." },
-    { "name": "takeoff-estimator",   "model": "claude-sonnet-4-6", "description": "Extracts quantities from a scope description or drawing. Spawned by the builder agent." },
-    { "name": "photo-extractor",     "model": "claude-sonnet-4-6", "description": "Extracts measurements and product references from site photos. Spawned by installer and builder." },
-    { "name": "spec-validator",      "model": "claude-haiku-4-5",  "description": "Checks spec sheets for completeness — every field must be present before output." },
-    { "name": "quote-renderer",      "model": "claude-haiku-4-5",  "description": "Renders the final costed quote in client-ready format." },
-    { "name": "deadline-watcher",    "model": "claude-haiku-4-5",  "description": "Automated daily check on project milestones, supplier lead times, and certification expiry. Runs on a cron schedule." },
-    { "name": "compliance-guardian", "model": "claude-haiku-4-5",  "description": "Flags work requiring licensed certification (Part P, Gas Safe, MCS, DNO) before it appears in any BoM or quote." }
+    {
+      "name": "supplier-pricer",
+      "model": "claude-haiku-4-5",
+      "description": "Fetches live prices from named UK/EU/US trade counters via web_fetch. Spawned by wholesale-buyer and quote-builder."
+    },
+    {
+      "name": "takeoff-estimator",
+      "model": "claude-sonnet-4-6",
+      "description": "Extracts quantities from a scope description or drawing. Spawned by the builder agent."
+    },
+    {
+      "name": "photo-extractor",
+      "model": "claude-sonnet-4-6",
+      "description": "Extracts measurements and product references from site photos. Spawned by installer and builder."
+    },
+    {
+      "name": "spec-validator",
+      "model": "claude-haiku-4-5",
+      "description": "Checks spec sheets for completeness — every field must be present before output."
+    },
+    {
+      "name": "quote-renderer",
+      "model": "claude-haiku-4-5",
+      "description": "Renders the final costed quote in client-ready format."
+    },
+    {
+      "name": "deadline-watcher",
+      "model": "claude-haiku-4-5",
+      "description": "Automated daily check on project milestones, supplier lead times, and certification expiry. Runs on a cron schedule."
+    },
+    {
+      "name": "compliance-guardian",
+      "model": "claude-haiku-4-5",
+      "description": "Flags work requiring licensed certification (Part P, Gas Safe, MCS, DNO) before it appears in any BoM or quote."
+    }
   ],
   "governance": {
     "humanInLoopActions": [
-      "email.send", "supplier_portal.submit", "sign.execute",
-      "doc.export_pdf_docx", "email.create_draft", "drive.upload_draft"
+      "email.send",
+      "supplier_portal.submit",
+      "sign.execute",
+      "doc.export_pdf_docx",
+      "email.create_draft",
+      "drive.upload_draft"
     ],
     "guardrails": [
       "Prices sourced from named supplier pages only — never guessed",

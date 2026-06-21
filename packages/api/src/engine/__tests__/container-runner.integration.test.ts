@@ -1,5 +1,5 @@
 import { execFile as execFileCb } from 'child_process';
-import { mkdtemp, readFile, rm, writeFile } from 'fs/promises';
+import { chmod, mkdtemp, readFile, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -85,8 +85,13 @@ describe.skipIf(!dockerAvailable || isCI)('ContainerRunner integration', () => {
       }
     }
 
-    // Create temp directory for workspace mount
+    // Create temp directory for workspace mount. mkdtemp defaults to 0700
+    // owned by whoever runs the test — the container runs as uid 1000:1000,
+    // which can't traverse that when tests run as a different user (e.g.
+    // root). Open it up the same way agent-runner.service.ts does for real
+    // per-user workspaces.
     tmpDir = await mkdtemp(path.join(tmpdir(), 'clawix-integration-'));
+    await chmod(tmpDir, 0o777);
 
     // Start container via Docker CLI directly (bypass mount validation)
     const { stdout } = await execFile(
@@ -156,7 +161,13 @@ describe.skipIf(!dockerAvailable || isCI)('ContainerRunner integration', () => {
   });
 
   it('edit_file tool replaces text in a file', async () => {
-    await writeFile(path.join(tmpDir, 'edit-test.txt'), 'hello world');
+    const editTestPath = path.join(tmpDir, 'edit-test.txt');
+    await writeFile(editTestPath, 'hello world');
+    // edit_file rewrites in place via `tee`, which needs write permission on
+    // the existing file (unlike write_file's first call, which creates it
+    // fresh as the container user) — same host/container UID mismatch as the
+    // workspace dir itself.
+    await chmod(editTestPath, 0o666);
     const result = await editFileTool.execute({
       path: '/workspace/edit-test.txt',
       old_text: 'hello',

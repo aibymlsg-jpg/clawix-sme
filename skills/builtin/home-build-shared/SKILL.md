@@ -65,17 +65,17 @@ sku,description,supplier,unit,qty,unit_price,currency,line_total,notes
 
 Field rules:
 
-| Column        | Rule                                                                                |
-| ------------- | ----------------------------------------------------------------------------------- |
-| `sku`         | Supplier SKU if known, else `n/a`. Never blank.                                     |
-| `description` | Plain English; no marketing copy.                                                   |
-| `supplier`    | One named supplier per row. If unknown, write `unspecified`.                        |
-| `unit`        | One of: `each`, `m`, `m2`, `m3`, `kg`, `l`, `hr`, `day`. No abbreviations.          |
-| `qty`         | Number, two decimals max.                                                           |
-| `unit_price`  | Number, two decimals; or the literal string `TBC`.                                  |
-| `currency`    | ISO 4217 (`GBP`, `USD`, `EUR`). One currency per file.                              |
-| `line_total`  | `qty * unit_price` rounded to 2 dp; `TBC` if `unit_price` is `TBC`.                 |
-| `notes`       | Source URL + retrieval date for any priced row, or any clarifying note. Optional.   |
+| Column        | Rule                                                                              |
+| ------------- | --------------------------------------------------------------------------------- |
+| `sku`         | Supplier SKU if known, else `n/a`. Never blank.                                   |
+| `description` | Plain English; no marketing copy.                                                 |
+| `supplier`    | One named supplier per row. If unknown, write `unspecified`.                      |
+| `unit`        | One of: `each`, `m`, `m2`, `m3`, `kg`, `l`, `hr`, `day`. No abbreviations.        |
+| `qty`         | Number, two decimals max.                                                         |
+| `unit_price`  | Number, two decimals; or the literal string `TBC`.                                |
+| `currency`    | ISO 4217 (`GBP`, `USD`, `EUR`). One currency per file.                            |
+| `line_total`  | `qty * unit_price` rounded to 2 dp; `TBC` if `unit_price` is `TBC`.               |
+| `notes`       | Source URL + retrieval date for any priced row, or any clarifying note. Optional. |
 
 The aggregator script enforces this schema and refuses to total a file that breaks it.
 

@@ -10,8 +10,7 @@ import { PacksService } from './packs.service.js';
       provide: PacksService,
       useFactory: () => {
         const packsDir =
-          process.env['SKILLS_PACKS_DIR'] ??
-          path.resolve(process.cwd(), '../../skills/packs');
+          process.env['SKILLS_PACKS_DIR'] ?? path.resolve(process.cwd(), '../../skills/packs');
         return new PacksService(packsDir);
       },
     },

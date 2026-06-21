@@ -239,10 +239,9 @@ export default function ProfilePage() {
               <p className="text-xs text-muted-foreground">
                 {t('profile.waHint1')}{' '}
                 <code className="font-mono">&lt;countrycode&gt;&lt;number&gt;@s.whatsapp.net</code>{' '}
-                {t('profile.waHint2')}{' '}
-                <code className="font-mono">15551234567@s.whatsapp.net</code>
-                {t('profile.waHint3')}{' '}
-                <code className="font-mono">&lt;id&gt;@lid</code> {t('profile.waHint4')}
+                {t('profile.waHint2')} <code className="font-mono">15551234567@s.whatsapp.net</code>
+                {t('profile.waHint3')} <code className="font-mono">&lt;id&gt;@lid</code>{' '}
+                {t('profile.waHint4')}
               </p>
             </div>
           )}

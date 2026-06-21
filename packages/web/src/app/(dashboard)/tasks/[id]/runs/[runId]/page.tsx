@@ -59,7 +59,12 @@ export default function RunDetailPage() {
   }, [load]);
 
   if (loading) return <div className="p-6 text-muted-foreground">{t('taskDetail.loading')}</div>;
-  if (error) return <div className="p-6 text-destructive">{t('taskDetail.errorPrefix')} {error}</div>;
+  if (error)
+    return (
+      <div className="p-6 text-destructive">
+        {t('taskDetail.errorPrefix')} {error}
+      </div>
+    );
   if (!run) return <div className="p-6">{t('taskDetail.runNotFound')}</div>;
 
   return (

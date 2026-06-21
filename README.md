@@ -18,16 +18,16 @@
 
 ## Clawix is not a chatbot
 
-| | GPT-type chatbot | Claude Code / OpenClaw | **Clawix** |
-|---|---|---|---|
-| **What it is** | Conversational Q&A | Developer coding assistant | Multi-agent workflow platform |
-| **Who uses it** | Anyone asking questions | Software engineers | Finance, Legal, NGO, Construction teams |
-| **Memory** | Resets every session | Per-project only | Persistent — builds context over time |
-| **Agents** | One general model | One coding agent | Specialist coordinator + workers + sub-agents |
-| **Workflows** | Single turn | Single task | Multi-step, cross-agent, governed pipelines |
-| **Governance** | None | None | Human-in-loop gates, audit logs, RBAC |
-| **Data** | Sent to vendor cloud | Local files only | Self-hosted — your server, your data |
-| **Industry fit** | Generic | Code only | Finance · Legal · NGO · Construction · any domain |
+|                  | GPT-type chatbot        | Claude Code / OpenClaw     | **Clawix**                                        |
+| ---------------- | ----------------------- | -------------------------- | ------------------------------------------------- |
+| **What it is**   | Conversational Q&A      | Developer coding assistant | Multi-agent workflow platform                     |
+| **Who uses it**  | Anyone asking questions | Software engineers         | Finance, Legal, NGO, Construction teams           |
+| **Memory**       | Resets every session    | Per-project only           | Persistent — builds context over time             |
+| **Agents**       | One general model       | One coding agent           | Specialist coordinator + workers + sub-agents     |
+| **Workflows**    | Single turn             | Single task                | Multi-step, cross-agent, governed pipelines       |
+| **Governance**   | None                    | None                       | Human-in-loop gates, audit logs, RBAC             |
+| **Data**         | Sent to vendor cloud    | Local files only           | Self-hosted — your server, your data              |
+| **Industry fit** | Generic                 | Code only                  | Finance · Legal · NGO · Construction · any domain |
 
 **A GPT chatbot answers your question and forgets it.  
 Claude Code / OpenClaw writes code on your machine.  
@@ -40,10 +40,11 @@ Clawix runs specialist agents as a coordinated team — with memory, governance,
 Clawix ships with four ready-to-run industry bundles, each with pre-built skills, agents, sub-agents, and conversation starters. Open **Explore** in the dashboard to try one.
 
 ### 📊 Finance & Accounting
+
 Bookkeeping · Bank reconciliation · AP/AR aging · Cashflow forecasting · Internal audit · Management accounts
 
-| Agents | Sub-agents |
-|---|---|
+| Agents                                                                            | Sub-agents                                                                        |
+| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | Coordinator · Bookkeeping · Reconciliation · AP/AR · Cashflow · Audit · Reporting | OCR extractor · GL classifier · Variance analyzer · Evidence collector · Reviewer |
 
 Human approval required on: journal entries, payment runs, period close, filings.
@@ -51,10 +52,11 @@ Human approval required on: journal entries, payment runs, period close, filings
 ---
 
 ### ⚖️ Legal & Compliance
+
 Case research · Contract review · Due diligence · Redlining · Memo drafting · Deadline tracking
 
-| Agents | Sub-agents (automatic, non-bypassable) |
-|---|---|
+| Agents                                                                                                               | Sub-agents (automatic, non-bypassable)                            |
+| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | Case research · Contract analyst · Case summarizer · Due diligence · Legal drafter · Client comms · Intern assistant | Compliance guardian · Citation verifier · Prompt-injection sentry |
 
 Every output is a **draft for lawyer review** — the system never files, sends, or advises autonomously.
@@ -62,10 +64,11 @@ Every output is a **draft for lawyer review** — the system never files, sends,
 ---
 
 ### 🌍 NGO Operations
+
 Donor research · Grant proposals · M&E · Impact reports · Field operations · Safeguarding
 
-| Agents |
-|---|
+| Agents                                                                                               |
+| ---------------------------------------------------------------------------------------------------- |
 | Program coordinator · Donor engagement · Monitoring & evaluation · Communications · Field operations |
 
 Dignity-first data handling. Beneficiary names never stored in memory. All external comms require human approval.
@@ -73,10 +76,11 @@ Dignity-first data handling. Beneficiary names never stored in memory. All exter
 ---
 
 ### 🏗️ Home Build & Construction
+
 Material take-offs · Wholesale pricing · Schedules of works · Site surveys · Client proposals
 
-| Agents | Sub-agents |
-|---|---|
+| Agents                                                                         | Sub-agents                                                                                                                       |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | Coordinator · Installer · Builder · Designer · Wholesale buyer · Quote builder | Supplier pricer · Takeoff estimator · Photo extractor · Spec validator · Quote renderer · Deadline watcher · Compliance guardian |
 
 Prices fetched from live trade counter pages — never guessed. Flags unlicensed work (Part P, Gas Safe, MCS, DNO) automatically.
@@ -111,6 +115,7 @@ The Explore page picks it up automatically on next restart.
 - [Node.js 20+](https://nodejs.org/) and [pnpm](https://pnpm.io/installation) (`npm install -g pnpm`)
 
 Verify:
+
 ```bash
 node --version && pnpm --version && docker info --format '{{.ServerVersion}}'
 ```
@@ -171,7 +176,6 @@ Specialist   Specialist      ← each in its own isolated Docker container
 
 Every agent runs in its own sandboxed container — CPU-limited, memory-limited, read-only root filesystem, no network by default. A rogue response cannot affect other users, agents, or the host.
 
-
 ---
 
 ## Governance built in
@@ -186,27 +190,27 @@ Every agent runs in its own sandboxed container — CPU-limited, memory-limited,
 
 ## Multi-provider AI
 
-| Provider | Models | Status |
-|---|---|---|
-| **Anthropic** | Claude Opus, Sonnet, Haiku | ✅ Available |
-| **OpenAI** | GPT-4o, o1, o3, o4 | ✅ Available |
-| **Z.AI** | GLM models | ✅ Available |
-| **DeepSeek** | DeepSeek models | ✅ Available |
-| **Gemini** | Google ecosystem | ✅ Available |
-| **Kimi** | Long-context tasks | ✅ Available |
-| **Custom** | Any OpenAI-compatible endpoint (Ollama, vLLM) | ✅ Available |
-| Azure · OpenRouter | — | 🔜 Planned |
+| Provider           | Models                                        | Status       |
+| ------------------ | --------------------------------------------- | ------------ |
+| **Anthropic**      | Claude Opus, Sonnet, Haiku                    | ✅ Available |
+| **OpenAI**         | GPT-4o, o1, o3, o4                            | ✅ Available |
+| **Z.AI**           | GLM models                                    | ✅ Available |
+| **DeepSeek**       | DeepSeek models                               | ✅ Available |
+| **Gemini**         | Google ecosystem                              | ✅ Available |
+| **Kimi**           | Long-context tasks                            | ✅ Available |
+| **Custom**         | Any OpenAI-compatible endpoint (Ollama, vLLM) | ✅ Available |
+| Azure · OpenRouter | —                                             | 🔜 Planned   |
 
 ---
 
 ## Channels
 
-| Channel | Status |
-|---|---|
+| Channel       | Status       |
+| ------------- | ------------ |
 | Web dashboard | ✅ Available |
-| Telegram | ✅ Available |
-| WhatsApp | 🔜 Planned |
-| Slack | 🔜 Planned |
+| Telegram      | ✅ Available |
+| WhatsApp      | 🔜 Planned   |
+| Slack         | 🔜 Planned   |
 
 ---
 

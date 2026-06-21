@@ -46,7 +46,12 @@
       "tier": "READ",
       "model": "claude-sonnet-4-6",
       "description": "Retrieves case-law authorities for a stated legal question, filtered by jurisdiction and point-in-time.",
-      "skills": ["legal-case-law-search", "legal-jurisdiction-detection", "legal-citation-verification", "legal-statute-lookup"]
+      "skills": [
+        "legal-case-law-search",
+        "legal-jurisdiction-detection",
+        "legal-citation-verification",
+        "legal-statute-lookup"
+      ]
     },
     {
       "name": "contract-analyst",
@@ -54,7 +59,12 @@
       "tier": "READ",
       "model": "claude-sonnet-4-6",
       "description": "Parses contracts, flags non-standard clauses, compares to house templates, identifies risk.",
-      "skills": ["legal-contract-clause-analysis", "legal-risk-flagging", "legal-privilege-tagging", "legal-pii-redaction"]
+      "skills": [
+        "legal-contract-clause-analysis",
+        "legal-risk-flagging",
+        "legal-privilege-tagging",
+        "legal-pii-redaction"
+      ]
     },
     {
       "name": "case-summarizer",
@@ -70,7 +80,12 @@
       "tier": "READ",
       "model": "claude-sonnet-4-6",
       "description": "Scope-by-scope DD against a target's data room and public registers.",
-      "skills": ["legal-due-diligence-report", "legal-bundle-indexer", "legal-privilege-tagging", "legal-pii-redaction"]
+      "skills": [
+        "legal-due-diligence-report",
+        "legal-bundle-indexer",
+        "legal-privilege-tagging",
+        "legal-pii-redaction"
+      ]
     },
     {
       "name": "legal-drafter",
@@ -78,7 +93,12 @@
       "tier": "DRAFT",
       "model": "claude-sonnet-4-6",
       "description": "First-draft memos, letters, clause edits, and redlines — always returned as drafts for lawyer review.",
-      "skills": ["legal-memo-drafting", "legal-redline-generation", "legal-brief-section-drafter", "legal-disclaimer-insertion"]
+      "skills": [
+        "legal-memo-drafting",
+        "legal-redline-generation",
+        "legal-brief-section-drafter",
+        "legal-disclaimer-insertion"
+      ]
     },
     {
       "name": "deadline-watcher",
@@ -124,8 +144,12 @@
   ],
   "governance": {
     "humanInLoopActions": [
-      "send_client_communication", "file_court_document", "execute_agreement",
-      "release_legal_hold", "disclose_privileged_document", "unmask_pii"
+      "send_client_communication",
+      "file_court_document",
+      "execute_agreement",
+      "release_legal_hold",
+      "disclose_privileged_document",
+      "unmask_pii"
     ],
     "guardrails": [
       "No jurisdiction outside matter scope without explicit flag",

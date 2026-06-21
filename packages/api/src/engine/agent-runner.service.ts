@@ -464,6 +464,14 @@ export class AgentRunnerService {
         });
       }
 
+      // Record the container handle so the stale-run reaper can force-stop it
+      // directly if this run later hangs somewhere that ignores its abort signal.
+      this.agentRunRegistry.attachContainer(agentRun.id, {
+        containerId,
+        sessionId: usePool ? (session?.id ?? null) : null,
+        usePool,
+      });
+
       // Step 13: Create ToolRegistry, register builtin tools + web tools + memory/wiki tools + spawn tool
       const registry = new ToolRegistry();
       registerBuiltinTools(registry, containerId, this.containerRunner);

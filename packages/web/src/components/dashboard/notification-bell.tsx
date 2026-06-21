@@ -256,7 +256,9 @@ function NotificationRow({
 
   if (notification.type === 'GROUP_INVITE_RESPONSE') {
     const who =
-      notification.payload.responderName ?? notification.payload.responderEmail ?? t('bell.aMember');
+      notification.payload.responderName ??
+      notification.payload.responderEmail ??
+      t('bell.aMember');
     const groupName = notification.payload.groupName ?? t('bell.yourGroup');
     const accepted = notification.payload.response === 'accepted';
     return (
@@ -272,7 +274,9 @@ function NotificationRow({
           </span>{' '}
           {t('bell.yourInvite')}
         </div>
-        <div className="text-xs text-muted-foreground">{t('bell.toGroup', { group: groupName })}</div>
+        <div className="text-xs text-muted-foreground">
+          {t('bell.toGroup', { group: groupName })}
+        </div>
         <div className="mt-1 text-[10px] text-muted-foreground">
           {new Date(notification.createdAt).toLocaleString()}
         </div>

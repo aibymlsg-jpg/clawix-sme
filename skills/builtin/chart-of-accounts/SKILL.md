@@ -2,7 +2,7 @@
 name: chart-of-accounts
 description: How the firm uses its chart of accounts — the firm-level baseline chart, per-engagement overrides, the rules for proposing a new account (always a coding question, never an invented code), and the per-engagement coding-memory file. Read by bookkeeping and gl-classifier.
 user-invocable: true
-metadata: { "openclaw": { "always": false, "emoji": "🗂️" } }
+metadata: { 'openclaw': { 'always': false, 'emoji': '🗂️' } }
 ---
 
 # What the chart is, and what it is not
@@ -47,7 +47,7 @@ The exact account file (yaml) carries `code`, `name`, `parent`, `statutory-mappi
 
 ## Per-engagement coding-memory
 
-`engagements/<code>/coding-memory.yml` records prior coding decisions on the same counterparty/description pattern. It is updated *only* by humans when they accept or amend a draft entry, and it is then read by `gl-classifier` for future suggestions.
+`engagements/<code>/coding-memory.yml` records prior coding decisions on the same counterparty/description pattern. It is updated _only_ by humans when they accept or amend a draft entry, and it is then read by `gl-classifier` for future suggestions.
 
 The agent never writes to `coding-memory.yml` from a draft. Memory builds from posted decisions, not proposed ones.
 

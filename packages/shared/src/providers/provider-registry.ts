@@ -91,7 +91,7 @@ const GEMINI_SPEC: ProviderSpec = {
   displayName: 'Google Gemini',
   modelPrefixes: ['gemini-'],
   envKey: 'GEMINI_API_KEY',
-  defaultModel: 'gemini-2.5-flash',
+  defaultModel: 'gemini-3-flash-preview',
   supportsTools: true,
   supportsThinking: false,
   pricing: [

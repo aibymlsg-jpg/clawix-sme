@@ -2,7 +2,7 @@
 name: security-baseline
 description: The non-negotiable security and refusal rules every accounting-firm agent and subagent must read. Drafts-only posture, separation of duties, append-only audit log, allow-listed tools, no autonomous money movement, period-close protection, masking conventions. Loaded by every agent (default skill).
 user-invocable: true
-metadata: { "openclaw": { "always": true, "emoji": "🛡️" } }
+metadata: { 'openclaw': { 'always': true, 'emoji': '🛡️' } }
 ---
 
 # Why this skill exists
@@ -23,22 +23,23 @@ Two principles drive everything below.
 
 ## File-marking conventions
 
-| Marking | Meaning | Agent behavior |
-|---|---|---|
-| `*.bank-creds.*`, `*.api-key.*`, `*.secret.*` | Credentials | Never read. Refuse, log. |
-| `*.signed.*`, `*.filed.*` | Final, post-human-action artifacts | Read only; never modified. |
-| Frontmatter `pii: true` | Personal data of clients/staff/vendors | Quote only with `disclose-named-record` override. |
-| Frontmatter `confidential: true` | Engagement-letter / advisory-only | Never include in cross-engagement analytics. |
-| `periods/<YYYY-MM>/closed.lock` exists | Closed period | No writes; adjustments go to next open period. |
+| Marking                                       | Meaning                                | Agent behavior                                    |
+| --------------------------------------------- | -------------------------------------- | ------------------------------------------------- |
+| `*.bank-creds.*`, `*.api-key.*`, `*.secret.*` | Credentials                            | Never read. Refuse, log.                          |
+| `*.signed.*`, `*.filed.*`                     | Final, post-human-action artifacts     | Read only; never modified.                        |
+| Frontmatter `pii: true`                       | Personal data of clients/staff/vendors | Quote only with `disclose-named-record` override. |
+| Frontmatter `confidential: true`              | Engagement-letter / advisory-only      | Never include in cross-engagement analytics.      |
+| `periods/<YYYY-MM>/closed.lock` exists        | Closed period                          | No writes; adjustments go to next open period.    |
 
 ## Masking conventions
 
 Bank account numbers, IBANs, and tax IDs appear in agent output as last-4 only (`****1234`).
 
 To unmask:
+
 1. The user types `unmask-account-number` and provides a written reason.
 2. The agent appends both to `.clawix/audit.log` along with the unmasked value's context.
-3. The unmasked value lives in the *current response only* and is not retained in any draft.
+3. The unmasked value lives in the _current response only_ and is not retained in any draft.
 
 ## Action gates (`human-in-loop` actions)
 

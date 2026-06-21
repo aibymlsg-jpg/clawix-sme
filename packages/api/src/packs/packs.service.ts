@@ -102,11 +102,16 @@ export class PacksService {
         tags: Array.isArray(parsed['tags']) ? (parsed['tags'] as string[]) : [],
         skills: Array.isArray(parsed['skills']) ? (parsed['skills'] as string[]) : [],
         agents: Array.isArray(parsed['agents']) ? (parsed['agents'] as PackAgent[]) : [],
-        subagents: Array.isArray(parsed['subagents']) ? (parsed['subagents'] as PackSubagent[]) : [],
-        inspirations: Array.isArray(parsed['inspirations']) ? (parsed['inspirations'] as PackInspiration[]) : [],
-        governance: typeof parsed['governance'] === 'object' && parsed['governance'] !== null
-          ? (parsed['governance'] as Record<string, unknown>)
-          : undefined,
+        subagents: Array.isArray(parsed['subagents'])
+          ? (parsed['subagents'] as PackSubagent[])
+          : [],
+        inspirations: Array.isArray(parsed['inspirations'])
+          ? (parsed['inspirations'] as PackInspiration[])
+          : [],
+        governance:
+          typeof parsed['governance'] === 'object' && parsed['governance'] !== null
+            ? (parsed['governance'] as Record<string, unknown>)
+            : undefined,
         skillCount: Array.isArray(parsed['skills']) ? parsed['skills'].length : 0,
         agentCount: Array.isArray(parsed['agents']) ? parsed['agents'].length : 0,
       };

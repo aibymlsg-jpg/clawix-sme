@@ -2,7 +2,7 @@
 name: ap-ar-aging
 description: Aging buckets, dispute handling, payment-run construction, dunning-note templates, and the rules around vendor master-data hygiene (the most common fraud vector). Read by ap-ar, cashflow, audit.
 user-invocable: true
-metadata: { "openclaw": { "always": false, "emoji": "📅" } }
+metadata: { 'openclaw': { 'always': false, 'emoji': '📅' } }
 ---
 
 # Aging buckets
@@ -73,13 +73,13 @@ The category is on the customer master file. The agent does not infer it.
 
 ## Standard escalation
 
-| Days past due | Action |
-|---|---|
-| 1–14 | No action; standard reminder optional |
-| 15–30 | First note (templated) |
-| 31–60 | Second note + phone-call request to engagement partner |
-| 61–90 | Formal note + suspend new credit |
-| 90+ | Refer to partner; consider write-off discussion |
+| Days past due | Action                                                 |
+| ------------- | ------------------------------------------------------ |
+| 1–14          | No action; standard reminder optional                  |
+| 15–30         | First note (templated)                                 |
+| 31–60         | Second note + phone-call request to engagement partner |
+| 61–90         | Formal note + suspend new credit                       |
+| 90+           | Refer to partner; consider write-off discussion        |
 
 The agent drafts. The human sends.
 

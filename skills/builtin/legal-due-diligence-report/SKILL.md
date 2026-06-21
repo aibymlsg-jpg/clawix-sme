@@ -50,9 +50,7 @@ or to assemble an interim DD report for a single scope.
   "matter_id": "uuid",
   "as_of": "YYYY-MM-DD",
   "exec_summary": "string",
-  "sections": [
-    { "scope": "corporate", "body": "string", "citations": [] }
-  ],
+  "sections": [{ "scope": "corporate", "body": "string", "citations": [] }],
   "missing_documents": ["string"],
   "follow_ups": ["string"],
   "disclaimer": "non-removable footer"

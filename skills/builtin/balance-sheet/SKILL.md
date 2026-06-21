@@ -2,7 +2,7 @@
 name: balance-sheet
 description: How the reporting agent constructs the balance sheet — preconditions, account-range mapping, comparative-period rules, restatement discipline, and the rule that interim cuts are watermarked. Read by reporting, audit.
 user-invocable: true
-metadata: { "openclaw": { "always": false, "emoji": "📊" } }
+metadata: { 'openclaw': { 'always': false, 'emoji': '📊' } }
 ---
 
 # Preconditions before producing a balance sheet

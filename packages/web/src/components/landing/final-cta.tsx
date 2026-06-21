@@ -15,9 +15,7 @@ export function FinalCtaSection() {
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {t('home.finalCta.title')}
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            {t('home.finalCta.description')}
-          </p>
+          <p className="mt-4 text-lg text-muted-foreground">{t('home.finalCta.description')}</p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Button asChild size="lg">

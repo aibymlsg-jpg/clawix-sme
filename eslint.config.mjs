@@ -9,7 +9,7 @@ export default tseslint.config(
       '**/dist/**',
       '**/node_modules/**',
       '**/coverage/**',
-      'references/**',
+      'reference/**',
       '**/.next/**',
       '**/next-env.d.ts',
       '**/prisma/seed.ts',

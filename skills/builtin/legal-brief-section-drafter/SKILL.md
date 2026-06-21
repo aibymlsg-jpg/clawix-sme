@@ -32,7 +32,9 @@ has approved the outline. Adapted from
   "section_type": "argument|facts|procedural_posture|introduction|conclusion",
   "matter_id": "uuid",
   "draft_body": "string with [[cite:n]] placeholders",
-  "citations": [ /* case-research.authorities */ ],
+  "citations": [
+    /* case-research.authorities */
+  ],
   "label": "for-filing-review",
   "open_questions_for_lawyer": ["string"]
 }

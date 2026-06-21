@@ -213,10 +213,12 @@ describe('AuthService — refresh TOCTOU', () => {
       getOrThrow: vi.fn(() => 'test-secret'),
       get: vi.fn(() => '12'),
     };
+    const mail = { sendOtp: vi.fn(), sendTrainingWelcome: vi.fn() };
     const service = new AuthService(
       prisma as never,
       jwt as unknown as JwtService,
       redis as never,
+      mail as never,
       config as unknown as ConfigService,
     );
 
@@ -246,10 +248,12 @@ describe('AuthService — refresh TOCTOU', () => {
       getOrThrow: vi.fn(() => 'test-secret'),
       get: vi.fn(() => '12'),
     };
+    const mail = { sendOtp: vi.fn(), sendTrainingWelcome: vi.fn() };
     const service = new AuthService(
       prisma as never,
       jwt as unknown as JwtService,
       redis as never,
+      mail as never,
       config as unknown as ConfigService,
     );
 

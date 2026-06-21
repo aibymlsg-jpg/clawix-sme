@@ -17,7 +17,7 @@ drafting skill needs the exact text of a provision.
 # How
 
 1. Resolve the reference to a canonical statute ID for the jurisdiction.
-2. Pull the text *as in force on* `as_of` — never the latest unless
+2. Pull the text _as in force on_ `as_of` — never the latest unless
    `as_of` is today.
 3. Return text, section/subsection anchors, and amendment history pointer.
 

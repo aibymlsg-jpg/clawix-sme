@@ -18,14 +18,14 @@ interface DoDropletResponse {
     name: string;
     status: string;
     networks: {
-      v4: Array<{ ip_address: string; type: string }>;
-      v6: Array<{ ip_address: string; type: string }>;
+      v4: { ip_address: string; type: string }[];
+      v6: { ip_address: string; type: string }[];
     };
   };
 }
 
 interface DoSizeResponse {
-  sizes: Array<{
+  sizes: {
     slug: string;
     description: string;
     vcpus: number;
@@ -34,7 +34,7 @@ interface DoSizeResponse {
     price_monthly: number;
     available: boolean;
     regions: string[];
-  }>;
+  }[];
 }
 
 interface DoSshKeyResponse {
@@ -157,7 +157,7 @@ export class DigitalOceanService {
         imageSlug: DROPLET_IMAGE,
         status: 'creating',
         ...(input.servicePackage ? { servicePackage: input.servicePackage } : {}),
-        ...(input.serviceField   ? { serviceField:   input.serviceField   } : {}),
+        ...(input.serviceField ? { serviceField: input.serviceField } : {}),
       },
     });
   }

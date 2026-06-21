@@ -2,7 +2,7 @@
 name: financial-reporting
 description: The full monthly close pack — trial balance, balance sheet, P&L, cash-flow statement, statement of changes in equity, variance bridge, and the partner's one-page status pack. Disclosure-note templates, KPI definitions, traffic-light thresholds. Read by reporting, audit.
 user-invocable: true
-metadata: { "openclaw": { "always": false, "emoji": "📑" } }
+metadata: { 'openclaw': { 'always': false, 'emoji': '📑' } }
 ---
 
 # The pack

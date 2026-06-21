@@ -59,6 +59,18 @@ export class StaleRunReaperService implements OnModuleInit, OnModuleDestroy {
       this.agentRunRegistry.abort(id, 'stale_timeout');
     }
 
+    // abort() only requests cancellation. If a run is hung somewhere that
+    // doesn't honor the signal, its own cleanup (which releases/stops the
+    // container) may never run — force every container down directly so
+    // none can outlive its run indefinitely. Best-effort: a failure here must
+    // not block the DB update below, which is what actually frees the run's
+    // slot for retry.
+    await Promise.all(stale.map(({ id }) => this.agentRunRegistry.forceStopContainer(id))).catch(
+      (err: unknown) => {
+        logger.warn({ err }, 'forceStopContainer failed for one or more stale runs');
+      },
+    );
+
     const result = await this.prisma.agentRun.updateMany({
       where: { status: 'running', startedAt: { lt: cutoff } },
       data: {

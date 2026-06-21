@@ -13,11 +13,11 @@
 
 ## Dimensions
 
-| Axis             | Value     |
-| ---------------- | --------- |
-| Width            | <mm / in> |
-| Depth            | <mm / in> |
-| Height           | <mm / in> |
+| Axis                                   | Value     |
+| -------------------------------------- | --------- |
+| Width                                  | <mm / in> |
+| Depth                                  | <mm / in> |
+| Height                                 | <mm / in> |
 | Door swing / drawer pull-out clearance | <mm / in> |
 
 ## Materials

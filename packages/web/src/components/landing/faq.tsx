@@ -49,9 +49,7 @@ export function FaqSection() {
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {t('home.faq.title')}
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            {t('home.faq.description')}
-          </p>
+          <p className="mt-4 text-lg text-muted-foreground">{t('home.faq.description')}</p>
         </div>
 
         <div className="mx-auto mt-16 max-w-3xl">

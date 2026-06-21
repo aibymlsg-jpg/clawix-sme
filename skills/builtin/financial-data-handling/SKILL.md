@@ -2,7 +2,7 @@
 name: financial-data-handling
 description: How the agents handle financial data — masking, retention, cross-engagement isolation, source-document immutability, and the rules around exporting numbers outside the workspace. Loaded by every agent (default skill).
 user-invocable: true
-metadata: { "openclaw": { "always": true, "emoji": "💼" } }
+metadata: { 'openclaw': { 'always': true, 'emoji': '💼' } }
 ---
 
 # Why this skill exists
@@ -13,7 +13,7 @@ A firm's data is the firm's licence to operate. Loss of confidentiality, integri
 
 - Documents arrive in `inbox/`. The accounting-coordinator agent (or a human) routes them into `source-docs/<engagement>/<period>/<hash>-<original-name>` and they are immutable from then on.
 - An agent never writes to `source-docs/`. Read-only.
-- If a source document is wrong (vendor sent a corrected invoice), the corrected version lands as a *new* file with its own hash; the original is preserved with a note linking forward.
+- If a source document is wrong (vendor sent a corrected invoice), the corrected version lands as a _new_ file with its own hash; the original is preserved with a note linking forward.
 
 ## Cross-engagement isolation
 
@@ -24,12 +24,12 @@ A firm's data is the firm's licence to operate. Loss of confidentiality, integri
 
 ## Masking
 
-| Field | Default | Unmask path |
-|---|---|---|
-| Bank account number / IBAN | last-4 only | `unmask-account-number` + reason, logged |
-| Tax ID / VAT number | last-4 only | `unmask-tax-id` + reason, logged |
-| Client / vendor / customer legal name | engagement code in cross-engagement output; legal name allowed in single-engagement output | n/a |
-| Employee personal data | masked unless the artifact is the payroll register itself | `disclose-named-record` + reason |
+| Field                                 | Default                                                                                    | Unmask path                              |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| Bank account number / IBAN            | last-4 only                                                                                | `unmask-account-number` + reason, logged |
+| Tax ID / VAT number                   | last-4 only                                                                                | `unmask-tax-id` + reason, logged         |
+| Client / vendor / customer legal name | engagement code in cross-engagement output; legal name allowed in single-engagement output | n/a                                      |
+| Employee personal data                | masked unless the artifact is the payroll register itself                                  | `disclose-named-record` + reason         |
 
 Masking applies to draft artifacts and to chat output alike. An unmasked value lives in the response that requested it; it is not retained in a draft file unless the artifact requires it.
 

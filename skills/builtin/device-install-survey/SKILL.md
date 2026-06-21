@@ -36,14 +36,14 @@ Then scaffold the project per `home-build-shared` and start the survey.
 
 Drive to one of the survey templates in `references/` based on category:
 
-| Category                    | Template                                        |
-| --------------------------- | ----------------------------------------------- |
-| Smart lighting / switches   | `references/survey-smart-lighting.md`           |
-| AV (TVs, speakers, projectors) | `references/survey-av.md`                    |
-| CCTV / doorbell / alarm     | `references/survey-security.md`                 |
-| Network (Wi-Fi, mesh, AP)   | `references/survey-network.md`                  |
-| EV charger                  | `references/survey-ev-charger.md`               |
-| Heat pump (ASHP)            | `references/survey-heat-pump.md`                |
+| Category                       | Template                              |
+| ------------------------------ | ------------------------------------- |
+| Smart lighting / switches      | `references/survey-smart-lighting.md` |
+| AV (TVs, speakers, projectors) | `references/survey-av.md`             |
+| CCTV / doorbell / alarm        | `references/survey-security.md`       |
+| Network (Wi-Fi, mesh, AP)      | `references/survey-network.md`        |
+| EV charger                     | `references/survey-ev-charger.md`     |
+| Heat pump (ASHP)               | `references/survey-heat-pump.md`      |
 
 Each template lists the questions and the photos to ask the user to upload. Save the user's responses + photo filenames into `/workspace/<project>/survey.md`.
 

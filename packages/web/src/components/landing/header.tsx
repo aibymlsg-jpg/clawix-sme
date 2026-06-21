@@ -54,9 +54,7 @@ export function Header() {
                   <a
                     href={item.href}
                     className="cursor-pointer"
-                    {...(item.external
-                      ? { target: '_blank', rel: 'noopener noreferrer' }
-                      : {})}
+                    {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   >
                     <span className="flex-1">{t(item.key)}</span>
                     {item.external && <ArrowUpRight className="size-3.5 opacity-60" />}

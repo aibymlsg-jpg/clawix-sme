@@ -86,7 +86,8 @@ async function main() {
         isOfficial: true,
       }),
     });
-    if (!res.ok) throw new Error(`Create failed for ${agent.name}: ${res.status} ${await res.text()}`);
+    if (!res.ok)
+      throw new Error(`Create failed for ${agent.name}: ${res.status} ${await res.text()}`);
     console.log(`+ created: ${agent.name}  [${agent.pack}]`);
   }
   console.log('Done.');

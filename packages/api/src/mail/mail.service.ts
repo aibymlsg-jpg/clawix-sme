@@ -11,13 +11,14 @@ export class MailService {
   private readonly webUrl: string;
 
   constructor(private readonly config: ConfigService) {
-    this.from   = config.get('SMTP_FROM') ?? 'Clawix <noreply@clawix.aibyml.com>';
+    this.from = config.get('SMTP_FROM') ?? 'Clawix <noreply@clawix.aibyml.com>';
     this.appName = config.get('APP_NAME') ?? 'Clawix';
-    this.webUrl  = config.get('NEXT_PUBLIC_API_URL')?.replace(':3001', ':3000') ?? 'http://localhost:3000';
+    this.webUrl =
+      config.get('NEXT_PUBLIC_API_URL')?.replace(':3001', ':3000') ?? 'http://localhost:3000';
 
     this.transporter = nodemailer.createTransport({
-      host:   config.get('SMTP_HOST') ?? 'smtp.gmail.com',
-      port:   Number(config.get('SMTP_PORT') ?? 587),
+      host: config.get('SMTP_HOST') ?? 'smtp.gmail.com',
+      port: Number(config.get('SMTP_PORT') ?? 587),
       secure: config.get('SMTP_SECURE') === 'true',
       auth: {
         user: config.get('SMTP_USER'),
@@ -71,10 +72,20 @@ export class MailService {
         </p>
       </div>`;
 
-    await this.send(email, `Welcome to AI Agent Training with ${brand} — sign in to get started`, html);
+    await this.send(
+      email,
+      `Welcome to AI Agent Training with ${brand} — sign in to get started`,
+      html,
+    );
   }
 
-  async sendPaymentLink(email: string, name: string, token: string, planLabel: string, orgName?: string): Promise<void> {
+  async sendPaymentLink(
+    email: string,
+    name: string,
+    token: string,
+    planLabel: string,
+    orgName?: string,
+  ): Promise<void> {
     const brand = orgName ?? this.appName;
     const url = `${this.webUrl}/payment?token=${token}`;
     const html = `
@@ -98,7 +109,11 @@ export class MailService {
         <p style="margin:0;color:#6b7280;font-size:13px">Link expires in 24 hours.</p>
       </div>`;
 
-    await this.send(email, `Activate your ${brand} Cloud Computer (Droplet) — complete payment`, html);
+    await this.send(
+      email,
+      `Activate your ${brand} Cloud Computer (Droplet) — complete payment`,
+      html,
+    );
   }
 
   async sendDropletReady(
@@ -137,7 +152,12 @@ export class MailService {
     await this.send(email, `Your ${brand} Cloud Computer (Droplet) is ready — ${dropletIp}`, html);
   }
 
-  async sendDropletActivating(email: string, name: string, planLabel: string, orgName?: string): Promise<void> {
+  async sendDropletActivating(
+    email: string,
+    name: string,
+    planLabel: string,
+    orgName?: string,
+  ): Promise<void> {
     const brand = orgName ?? this.appName;
     const html = `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
@@ -155,7 +175,11 @@ export class MailService {
         </a>
       </div>`;
 
-    await this.send(email, `Payment confirmed — your ${brand} Cloud Computer (Droplet) is activating`, html);
+    await this.send(
+      email,
+      `Payment confirmed — your ${brand} Cloud Computer (Droplet) is activating`,
+      html,
+    );
   }
 
   private async send(to: string, subject: string, html: string): Promise<void> {

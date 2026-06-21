@@ -71,7 +71,12 @@ export class AuthController {
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
-    const tokens = await this.authService.register(body.name, body.email, body.password, body.orgName);
+    const tokens = await this.authService.register(
+      body.name,
+      body.email,
+      body.password,
+      body.orgName,
+    );
     setRefreshCookie(req, reply, tokens.refreshToken);
     return tokens;
   }

@@ -17,10 +17,10 @@ services:
     image: nginxproxy/nginx-proxy:latest
     container_name: clawix-nginx-proxy
     restart: unless-stopped
-    profiles: ["tls"]
+    profiles: ['tls']
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - nginx-certs:/etc/nginx/certs
       - nginx-html:/usr/share/nginx/html
@@ -33,7 +33,7 @@ services:
     image: nginxproxy/acme-companion:latest
     container_name: clawix-acme
     restart: unless-stopped
-    profiles: ["tls"]
+    profiles: ['tls']
     # Default-empty so compose interpolation (which runs before profiles are
     # applied) never fails for non-TLS installs. Set LETSENCRYPT_EMAIL in .env
     # before enabling the "tls" profile, or acme-companion cannot issue certs.
@@ -171,7 +171,7 @@ services:
       NODE_ENV: production
       VIRTUAL_HOST: ${DOMAIN:-}
       LETSENCRYPT_HOST: ${DOMAIN:-}
-      VIRTUAL_PORT: "3000"
+      VIRTUAL_PORT: '3000'
     depends_on:
       - api
     networks:

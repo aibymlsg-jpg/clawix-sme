@@ -2,7 +2,7 @@
 name: internal-audit
 description: The firm's standard internal-audit checks (cut-off, completeness, segregation of duties, unusual-pattern detection, control-test sampling, period-close integrity), the finding format, and the materiality and traffic-light rules. Read by audit, reviewer, accounting-coordinator, reporting.
 user-invocable: true
-metadata: { "openclaw": { "always": false, "emoji": "🔎" } }
+metadata: { 'openclaw': { 'always': false, 'emoji': '🔎' } }
 ---
 
 # What the audit agent does, and what it does not
@@ -78,39 +78,39 @@ Sampling parameters live in `policies/audit-sampling.yml`:
 
 # Checklist: JE draft (run by `reviewer` subagent)
 
-| id | rule | severity if fail |
-|----|------|------------------|
-| JE-01 | Debits = credits | high |
-| JE-02 | Date is the economic-event date, not the run date | medium |
-| JE-03 | Period is open, or `prior-period-adjustment` is set | high |
-| JE-04 | Every line cites a source-doc with hash | high |
-| JE-05 | Account exists in the chart for this engagement | high |
-| JE-06 | Currency is engagement-base or has FX rate cited | medium |
-| JE-07 | Tax components agree to source-doc tax lines | high |
-| JE-08 | Memo describes what happened, not what it is | low |
-| JE-09 | Above-materiality entries include rationale | high |
-| JE-10 | Confidence is high, or the entry is in a review batch | medium |
+| id    | rule                                                  | severity if fail |
+| ----- | ----------------------------------------------------- | ---------------- |
+| JE-01 | Debits = credits                                      | high             |
+| JE-02 | Date is the economic-event date, not the run date     | medium           |
+| JE-03 | Period is open, or `prior-period-adjustment` is set   | high             |
+| JE-04 | Every line cites a source-doc with hash               | high             |
+| JE-05 | Account exists in the chart for this engagement       | high             |
+| JE-06 | Currency is engagement-base or has FX rate cited      | medium           |
+| JE-07 | Tax components agree to source-doc tax lines          | high             |
+| JE-08 | Memo describes what happened, not what it is          | low              |
+| JE-09 | Above-materiality entries include rationale           | high             |
+| JE-10 | Confidence is high, or the entry is in a review batch | medium           |
 
 # Checklist: reconciliation
 
-| id | rule | severity if fail |
-|----|------|------------------|
-| REC-01 | Opening = prior-period reviewed closing | high |
-| REC-02 | Auto-match meets policy threshold | medium |
-| REC-03 | Timing items present and ≤ policy age | medium |
-| REC-04 | Genuine differences are JE drafts, not plugs | high |
-| REC-05 | Reconciliation summary balances to the cent | high |
-| REC-06 | Account not marked reviewed by preparer | high |
+| id     | rule                                         | severity if fail |
+| ------ | -------------------------------------------- | ---------------- |
+| REC-01 | Opening = prior-period reviewed closing      | high             |
+| REC-02 | Auto-match meets policy threshold            | medium           |
+| REC-03 | Timing items present and ≤ policy age        | medium           |
+| REC-04 | Genuine differences are JE drafts, not plugs | high             |
+| REC-05 | Reconciliation summary balances to the cent  | high             |
+| REC-06 | Account not marked reviewed by preparer      | high             |
 
 # Checklist: payment run
 
-| id | rule | severity if fail |
-|----|------|------------------|
-| PAY-01 | Every line has invoice + vendor + amount + recommend + rationale | high |
-| PAY-02 | Holds applied per policy | high |
-| PAY-03 | Vendor master-data flag respected | high |
-| PAY-04 | Currency totals reconcile to base total | medium |
-| PAY-05 | No duplicate-payment pattern | high |
+| id     | rule                                                             | severity if fail |
+| ------ | ---------------------------------------------------------------- | ---------------- |
+| PAY-01 | Every line has invoice + vendor + amount + recommend + rationale | high             |
+| PAY-02 | Holds applied per policy                                         | high             |
+| PAY-03 | Vendor master-data flag respected                                | high             |
+| PAY-04 | Currency totals reconcile to base total                          | medium           |
+| PAY-05 | No duplicate-payment pattern                                     | high             |
 
 # Materiality and traffic lights
 

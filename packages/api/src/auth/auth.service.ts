@@ -34,12 +34,12 @@ class TooManyRequestsException extends HttpException {
   }
 }
 
-const OTP_PREFIX      = 'email-otp:';
-const OTP_COOLDOWN    = 'email-otp-cd:';
-const PAYMENT_TOKEN   = 'payment-token:';
-const OTP_TTL         = 600;   // 10 minutes
-const OTP_COOLDOWN_TTL = 60;   // 1 minute between resends
-const PAYMENT_TTL     = 86400; // 24 hours
+const OTP_PREFIX = 'email-otp:';
+const OTP_COOLDOWN = 'email-otp-cd:';
+const PAYMENT_TOKEN = 'payment-token:';
+const OTP_TTL = 600; // 10 minutes
+const OTP_COOLDOWN_TTL = 60; // 1 minute between resends
+const PAYMENT_TTL = 86400; // 24 hours
 const OTP_MAX_ATTEMPTS = 5;
 
 @Injectable()
@@ -60,7 +60,12 @@ export class AuthService {
     );
   }
 
-  async register(name: string, email: string, password: string, orgName?: string): Promise<TokenPair> {
+  async register(
+    name: string,
+    email: string,
+    password: string,
+    orgName?: string,
+  ): Promise<TokenPair> {
     if (this.config.get<string>('ALLOW_PUBLIC_SIGNUP') !== 'true') {
       throw new ForbiddenException('Public signup is not enabled');
     }
@@ -214,7 +219,10 @@ export class AuthService {
 
     const onCooldown = await this.redis.get<string>(`${OTP_COOLDOWN}${email}`);
     if (onCooldown) {
-      throw new HttpException('Please wait before requesting another code', HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException(
+        'Please wait before requesting another code',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
 
     const code = String(Math.floor(100000 + Math.random() * 900000));
@@ -228,7 +236,9 @@ export class AuthService {
     email: string,
     code: string,
   ): Promise<{ tokens: TokenPair; paymentToken: string }> {
-    const record = await this.redis.get<{ code: string; attempts: number }>(`${OTP_PREFIX}${email}`);
+    const record = await this.redis.get<{ code: string; attempts: number }>(
+      `${OTP_PREFIX}${email}`,
+    );
     if (!record) throw new UnauthorizedException('Code expired or not found — request a new one');
 
     if (record.attempts >= OTP_MAX_ATTEMPTS) {
@@ -280,13 +290,24 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('User not found');
 
     // Send "activating" email immediately
-    await this.mail.sendDropletActivating(user.email, user.name, planLabel, user.orgName ?? undefined);
+    await this.mail.sendDropletActivating(
+      user.email,
+      user.name,
+      planLabel,
+      user.orgName ?? undefined,
+    );
   }
 
   async notifyDropletReady(userId: string, dropletIp: string, planLabel: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) return;
-    await this.mail.sendDropletReady(user.email, user.name, dropletIp, planLabel, user.orgName ?? undefined);
+    await this.mail.sendDropletReady(
+      user.email,
+      user.name,
+      dropletIp,
+      planLabel,
+      user.orgName ?? undefined,
+    );
   }
 
   /**
@@ -306,7 +327,13 @@ export class AuthService {
 
     const paymentToken = randomBytes(24).toString('hex');
     await this.redis.set(`${PAYMENT_TOKEN}${paymentToken}`, userId, { ttlSeconds: PAYMENT_TTL });
-    await this.mail.sendPaymentLink(user.email, user.name, paymentToken, planLabel, user.orgName ?? undefined);
+    await this.mail.sendPaymentLink(
+      user.email,
+      user.name,
+      paymentToken,
+      planLabel,
+      user.orgName ?? undefined,
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────────

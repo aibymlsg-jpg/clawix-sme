@@ -29,12 +29,8 @@ export function HowItWorksSection() {
                 <div className="relative z-10 mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground shadow-lg">
                   {step.number}
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-foreground">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {step.description}
-                </p>
+                <h3 className="mt-4 text-lg font-semibold text-foreground">{step.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{step.description}</p>
               </div>
             ))}
           </div>

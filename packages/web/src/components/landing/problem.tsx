@@ -13,9 +13,7 @@ export function ProblemSection() {
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {t('home.problem.title')}
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            {t('home.problem.description')}
-          </p>
+          <p className="mt-4 text-lg text-muted-foreground">{t('home.problem.description')}</p>
         </div>
 
         <div className="mt-16 grid gap-8 md:grid-cols-2">

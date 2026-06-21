@@ -14,9 +14,7 @@ export function DemoSection() {
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {t('home.demo.title')}
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            {t('home.demo.description')}
-          </p>
+          <p className="mt-4 text-lg text-muted-foreground">{t('home.demo.description')}</p>
         </div>
 
         <div className="mt-12">

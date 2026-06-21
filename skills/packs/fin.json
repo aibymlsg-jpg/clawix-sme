@@ -30,7 +30,12 @@
       "role": "worker",
       "model": "claude-sonnet-4-6",
       "description": "Classifies transactions, drafts journal entries, and routes coding questions.",
-      "skills": ["security-baseline", "financial-data-handling", "chart-of-accounts", "double-entry-bookkeeping"],
+      "skills": [
+        "security-baseline",
+        "financial-data-handling",
+        "chart-of-accounts",
+        "double-entry-bookkeeping"
+      ],
       "spawns": ["ocr-extractor", "gl-classifier"]
     },
     {
@@ -38,7 +43,12 @@
       "role": "worker",
       "model": "claude-sonnet-4-6",
       "description": "Bank and ledger reconciliation — matches statements to posted entries, surfaces breaks.",
-      "skills": ["security-baseline", "financial-data-handling", "bank-reconciliation", "double-entry-bookkeeping"],
+      "skills": [
+        "security-baseline",
+        "financial-data-handling",
+        "bank-reconciliation",
+        "double-entry-bookkeeping"
+      ],
       "spawns": ["ocr-extractor", "evidence-collector"]
     },
     {
@@ -46,7 +56,12 @@
       "role": "worker",
       "model": "claude-sonnet-4-6",
       "description": "Manages payables and receivables aging, payment-run drafts, and dunning notices.",
-      "skills": ["security-baseline", "financial-data-handling", "ap-ar-aging", "double-entry-bookkeeping"],
+      "skills": [
+        "security-baseline",
+        "financial-data-handling",
+        "ap-ar-aging",
+        "double-entry-bookkeeping"
+      ],
       "spawns": ["evidence-collector", "gl-classifier"]
     },
     {
@@ -54,7 +69,12 @@
       "role": "worker",
       "model": "claude-sonnet-4-6",
       "description": "13-week cashflow forecast, scenario analysis, and variance commentary.",
-      "skills": ["security-baseline", "financial-data-handling", "cashflow-analysis", "ap-ar-aging"],
+      "skills": [
+        "security-baseline",
+        "financial-data-handling",
+        "cashflow-analysis",
+        "ap-ar-aging"
+      ],
       "spawns": ["variance-analyzer"]
     },
     {
@@ -62,7 +82,12 @@
       "role": "worker",
       "model": "claude-sonnet-4-6",
       "description": "Internal audit sampling, findings drafting, and review-pass tracking.",
-      "skills": ["security-baseline", "financial-data-handling", "internal-audit", "double-entry-bookkeeping"],
+      "skills": [
+        "security-baseline",
+        "financial-data-handling",
+        "internal-audit",
+        "double-entry-bookkeeping"
+      ],
       "spawns": ["evidence-collector", "reviewer"]
     },
     {
@@ -70,22 +95,54 @@
       "role": "worker",
       "model": "claude-sonnet-4-6",
       "description": "Drafts P&L, balance sheet, and management accounts from ledger data.",
-      "skills": ["security-baseline", "financial-data-handling", "balance-sheet", "financial-reporting", "double-entry-bookkeeping"],
+      "skills": [
+        "security-baseline",
+        "financial-data-handling",
+        "balance-sheet",
+        "financial-reporting",
+        "double-entry-bookkeeping"
+      ],
       "spawns": ["variance-analyzer", "evidence-collector"]
     }
   ],
   "subagents": [
-    { "name": "ocr-extractor",     "model": "claude-haiku-4-5", "description": "Extracts structured data from scanned invoices and statements." },
-    { "name": "gl-classifier",     "model": "claude-haiku-4-5", "description": "Classifies transactions against the chart of accounts." },
-    { "name": "variance-analyzer", "model": "claude-haiku-4-5", "description": "Computes budget-vs-actual variances and flags outliers." },
-    { "name": "evidence-collector","model": "claude-haiku-4-5", "description": "Pulls supporting documents for audit samples and reconciliations." },
-    { "name": "reviewer",          "model": "claude-sonnet-4-6","description": "Performs a second-pass review of draft outputs before approval." }
+    {
+      "name": "ocr-extractor",
+      "model": "claude-haiku-4-5",
+      "description": "Extracts structured data from scanned invoices and statements."
+    },
+    {
+      "name": "gl-classifier",
+      "model": "claude-haiku-4-5",
+      "description": "Classifies transactions against the chart of accounts."
+    },
+    {
+      "name": "variance-analyzer",
+      "model": "claude-haiku-4-5",
+      "description": "Computes budget-vs-actual variances and flags outliers."
+    },
+    {
+      "name": "evidence-collector",
+      "model": "claude-haiku-4-5",
+      "description": "Pulls supporting documents for audit samples and reconciliations."
+    },
+    {
+      "name": "reviewer",
+      "model": "claude-sonnet-4-6",
+      "description": "Performs a second-pass review of draft outputs before approval."
+    }
   ],
   "governance": {
     "humanInLoopActions": [
-      "post_journal_entry", "release_payment", "schedule_payment",
-      "send_invoice", "send_dunning_notice", "file_return",
-      "close_period", "adjust_prior_period", "change_chart_of_accounts"
+      "post_journal_entry",
+      "release_payment",
+      "schedule_payment",
+      "send_invoice",
+      "send_dunning_notice",
+      "file_return",
+      "close_period",
+      "adjust_prior_period",
+      "change_chart_of_accounts"
     ]
   },
   "inspirations": [

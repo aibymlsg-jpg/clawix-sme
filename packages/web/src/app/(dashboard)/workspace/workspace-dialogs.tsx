@@ -373,7 +373,9 @@ export function MoveDialog({
             <Folder className="h-4 w-4 shrink-0 text-amber-500" />
             <span className="truncate font-medium">{t('workspace.workspaceRoot')}</span>
             {rootIsCurrentDir && (
-              <span className="ml-auto text-xs text-muted-foreground">{t('workspace.current')}</span>
+              <span className="ml-auto text-xs text-muted-foreground">
+                {t('workspace.current')}
+              </span>
             )}
           </div>
 

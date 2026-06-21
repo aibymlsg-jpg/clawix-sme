@@ -1,4 +1,5 @@
 # Clawix SME · Agentic Intelligence for Small Business
+
 ## Layout Description & Claude Code Build Instructions
 
 > **Purpose of this document**: Hand this file to Claude Code and instruct it to build the Next.js / Tailwind frontend for `clawix-sme.aibyml.com`. All sections include design intent, copy, component structure, and data shapes. Claude Code should follow this spec exactly; where a decision is left open it is marked `[DECIDE]`.
@@ -7,16 +8,16 @@
 
 ## 0 · Project Identity
 
-| Field | Value |
-|---|---|
-| **Product name** | Clawix SME |
-| **Tagline** | *Your business, backed by a team of agents* |
-| **Target users** | Owner-operators of small builders, property agencies, property management firms, small restaurants, and accounting practices in HK / SG / APAC |
-| **Emotional register** | Reassuring, plain-spoken, quietly confident — the feeling of having a capable back-office team without the overhead |
-| **Repo to mirror** | `github.com/aibyml-ngo/clawix-account` (conversations page, agent examples, skill set patterns) |
-| **Reference frontend** | `https://accountclawix.aibyml.com` (hero layout, how-it-works flow, trust section) |
-| **Framework** | Next.js 14 (App Router), Tailwind CSS, TypeScript |
-| **Deployment** | Vercel |
+| Field                  | Value                                                                                                                                          |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Product name**       | Clawix SME                                                                                                                                     |
+| **Tagline**            | _Your business, backed by a team of agents_                                                                                                    |
+| **Target users**       | Owner-operators of small builders, property agencies, property management firms, small restaurants, and accounting practices in HK / SG / APAC |
+| **Emotional register** | Reassuring, plain-spoken, quietly confident — the feeling of having a capable back-office team without the overhead                            |
+| **Repo to mirror**     | `github.com/aibyml-ngo/clawix-account` (conversations page, agent examples, skill set patterns)                                                |
+| **Reference frontend** | `https://accountclawix.aibyml.com` (hero layout, how-it-works flow, trust section)                                                             |
+| **Framework**          | Next.js 14 (App Router), Tailwind CSS, TypeScript                                                                                              |
+| **Deployment**         | Vercel                                                                                                                                         |
 
 ---
 
@@ -26,15 +27,15 @@
 
 ```css
 /* globals.css — add to :root */
---clr-midnight:   #0F1523;   /* page background, nav */
---clr-slate:      #1C2333;   /* card backgrounds */
---clr-mist:       #2E3A50;   /* borders, dividers */
---clr-amber:      #F5A623;   /* primary accent — warmth, human, trade */
---clr-jade:       #2ECC9A;   /* success states, agent-ready indicators */
---clr-coral:      #E8584A;   /* review-required / alert badges */
---clr-snow:       #F0F4FA;   /* body text */
---clr-fog:        #8A96A8;   /* secondary text, captions */
---clr-glass:      rgba(255,255,255,0.04); /* card glassmorphism */
+--clr-midnight: #0f1523; /* page background, nav */
+--clr-slate: #1c2333; /* card backgrounds */
+--clr-mist: #2e3a50; /* borders, dividers */
+--clr-amber: #f5a623; /* primary accent — warmth, human, trade */
+--clr-jade: #2ecc9a; /* success states, agent-ready indicators */
+--clr-coral: #e8584a; /* review-required / alert badges */
+--clr-snow: #f0f4fa; /* body text */
+--clr-fog: #8a96a8; /* secondary text, captions */
+--clr-glass: rgba(255, 255, 255, 0.04); /* card glassmorphism */
 ```
 
 **Design rationale**: Deep midnight + warm amber speaks to trades and hospitality without feeling fintech-cold. Jade confirms agent readiness. Coral catches human attention at review gates — echoing the HITL philosophy baked into every Clawix system.
@@ -43,18 +44,18 @@
 
 ```css
 /* Use via next/font or @import in globals.css */
---font-display:  'Plus Jakarta Sans', sans-serif;   /* headlines, hero */
---font-body:     'Inter', sans-serif;               /* body, UI labels */
---font-mono:     'JetBrains Mono', monospace;       /* agent task streams */
+--font-display: 'Plus Jakarta Sans', sans-serif; /* headlines, hero */
+--font-body: 'Inter', sans-serif; /* body, UI labels */
+--font-mono: 'JetBrains Mono', monospace; /* agent task streams */
 ```
 
 ### 1.3 Spacing & Radius
 
 ```css
---radius-card:   12px;
---radius-badge:  6px;
---section-gap:   96px;   /* between major sections on desktop */
---card-pad:      28px;
+--radius-card: 12px;
+--radius-badge: 6px;
+--section-gap: 96px; /* between major sections on desktop */
+--card-pad: 28px;
 ```
 
 ---
@@ -142,13 +143,13 @@ Render a mock "live task stream" card that loops through five business scenarios
 
 **Five rotating scenarios** (cycle every 4 s):
 
-| # | Label | Owner request | Agents shown |
-|---|---|---|---|
-| 1 | 🏗 Builder · Quote | "Draft the quote for the Kowloon Tong renovation — materials, labour, margin." | quoting · material costs ✅ · labour schedule ✅ · margin check ⏳ |
-| 2 | 🏠 Property Agency · Listing | "Prepare the listing for Unit 12B, photos sorted, tenancy terms drafted." | listing-writer ✅ · photo-brief ✅ · tenancy-drafter ⏳ |
-| 3 | 🏢 Property Mgmt · Maintenance | "Log the plumbing fault at Block C, assign contractor, notify tenant." | fault-logger ✅ · contractor-match ✅ · tenant-notify ⏳ |
-| 4 | 🍜 Restaurant · Orders | "Reconcile today's orders with stock, flag what to reorder before Saturday." | pos-reader ✅ · stock-check ✅ · reorder-draft ⏳ |
-| 5 | 📊 Accounting · Month-end | "Close April — draft the entries, reconcile the bank, build the pack." | bookkeeping ✅ · reconciliation ✅ · reporting ⏳ |
+| #   | Label                          | Owner request                                                                  | Agents shown                                                       |
+| --- | ------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| 1   | 🏗 Builder · Quote             | "Draft the quote for the Kowloon Tong renovation — materials, labour, margin." | quoting · material costs ✅ · labour schedule ✅ · margin check ⏳ |
+| 2   | 🏠 Property Agency · Listing   | "Prepare the listing for Unit 12B, photos sorted, tenancy terms drafted."      | listing-writer ✅ · photo-brief ✅ · tenancy-drafter ⏳            |
+| 3   | 🏢 Property Mgmt · Maintenance | "Log the plumbing fault at Block C, assign contractor, notify tenant."         | fault-logger ✅ · contractor-match ✅ · tenant-notify ⏳           |
+| 4   | 🍜 Restaurant · Orders         | "Reconcile today's orders with stock, flag what to reorder before Saturday."   | pos-reader ✅ · stock-check ✅ · reorder-draft ⏳                  |
+| 5   | 📊 Accounting · Month-end      | "Close April — draft the entries, reconcile the bank, build the pack."         | bookkeeping ✅ · reconciliation ✅ · reporting ⏳                  |
 
 Card styling: `--clr-slate` background, `--clr-mist` border, `--radius-card`, inner font `--font-mono` 13px for task rows, amber left-border stripe.
 
@@ -184,11 +185,11 @@ Section heading (--font-display, 36px, --clr-snow, centred)
 Ask once. Agents handle the detail. You decide.
 ```
 
-| Step | Icon | Headline | Body |
-|---|---|---|---|
-| 1 · Ask | 💬 | **Tell it what you need** | Type a task in plain English — "Chase the outstanding invoice for Mr Chan" or "Rebook Table 4 for Friday." No forms. No dropdowns. The coordinator reads your intent and routes the work. |
-| 2 · Dispatch & Draft | ⚡ | **Agents get to work** | The right specialists — quoting, tenancy, maintenance, kitchen ops, bookkeeping — spin up in parallel, pull your documents and records, and assemble a sourced draft ready for your eyes. |
-| 3 · Review & Act | ✅ | **You approve before anything leaves** | Every draft arrives with its sources, a confidence level, and a human-review gate. You press send, post the entry, or assign the contractor — never the agents alone. |
+| Step                 | Icon | Headline                               | Body                                                                                                                                                                                      |
+| -------------------- | ---- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 · Ask              | 💬   | **Tell it what you need**              | Type a task in plain English — "Chase the outstanding invoice for Mr Chan" or "Rebook Table 4 for Friday." No forms. No dropdowns. The coordinator reads your intent and routes the work. |
+| 2 · Dispatch & Draft | ⚡   | **Agents get to work**                 | The right specialists — quoting, tenancy, maintenance, kitchen ops, bookkeeping — spin up in parallel, pull your documents and records, and assemble a sourced draft ready for your eyes. |
+| 3 · Review & Act     | ✅   | **You approve before anything leaves** | Every draft arrives with its sources, a confidence level, and a human-review gate. You press send, post the entry, or assign the contractor — never the agents alone.                     |
 
 Step card styling: `--clr-slate` background, top `4px` solid `--clr-amber` border, `--radius-card`. Step number as large faint numeral background watermark (`--clr-mist`, 120px, positioned top-right of card).
 
@@ -226,64 +227,64 @@ Each card:
 ```typescript
 const sectors = [
   {
-    emoji: "🏗",
-    name: "Small Builders & Contractors",
+    emoji: '🏗',
+    name: 'Small Builders & Contractors',
     handle: [
-      "Quote drafting from scope of works",
-      "Subcontractor scheduling & reminders",
-      "Variation order tracking",
-      "Invoice generation & follow-up",
+      'Quote drafting from scope of works',
+      'Subcontractor scheduling & reminders',
+      'Variation order tracking',
+      'Invoice generation & follow-up',
     ],
-    agentPack: "builder",
-    accent: "#F5A623",
+    agentPack: 'builder',
+    accent: '#F5A623',
   },
   {
-    emoji: "🏠",
-    name: "Property Agency",
+    emoji: '🏠',
+    name: 'Property Agency',
     handle: [
-      "Listing copy & photo brief",
-      "Tenancy agreement drafting",
-      "Viewing schedule coordination",
-      "Commission & pipeline tracking",
+      'Listing copy & photo brief',
+      'Tenancy agreement drafting',
+      'Viewing schedule coordination',
+      'Commission & pipeline tracking',
     ],
-    agentPack: "property-agency",
-    accent: "#2ECC9A",
+    agentPack: 'property-agency',
+    accent: '#2ECC9A',
   },
   {
-    emoji: "🏢",
-    name: "Property Management",
+    emoji: '🏢',
+    name: 'Property Management',
     handle: [
-      "Maintenance fault logging & routing",
-      "Contractor assignment & follow-up",
-      "Tenant communication drafts",
-      "Service charge reconciliation",
+      'Maintenance fault logging & routing',
+      'Contractor assignment & follow-up',
+      'Tenant communication drafts',
+      'Service charge reconciliation',
     ],
-    agentPack: "property-mgmt",
-    accent: "#7C9EF5",
+    agentPack: 'property-mgmt',
+    accent: '#7C9EF5',
   },
   {
-    emoji: "🍜",
-    name: "Restaurant & F&B",
+    emoji: '🍜',
+    name: 'Restaurant & F&B',
     handle: [
-      "Daily stock reconciliation",
-      "Supplier reorder drafts",
-      "Reservation management",
-      "Petty cash & daily takings log",
+      'Daily stock reconciliation',
+      'Supplier reorder drafts',
+      'Reservation management',
+      'Petty cash & daily takings log',
     ],
-    agentPack: "restaurant",
-    accent: "#E8584A",
+    agentPack: 'restaurant',
+    accent: '#E8584A',
   },
   {
-    emoji: "📊",
-    name: "Accounting Practice",
+    emoji: '📊',
+    name: 'Accounting Practice',
     handle: [
-      "Journal entry drafting from documents",
-      "Bank reconciliation",
-      "Month-end close pack",
-      "AP/AR aging & collection notes",
+      'Journal entry drafting from documents',
+      'Bank reconciliation',
+      'Month-end close pack',
+      'AP/AR aging & collection notes',
     ],
-    agentPack: "accounting",
-    accent: "#F5A623",
+    agentPack: 'accounting',
+    accent: '#F5A623',
   },
 ];
 ```
@@ -339,29 +340,134 @@ Each agent chip:
 ```typescript
 const agents = [
   // ── BUILDER PACK ──
-  { id: "quoter",       sector: "builder",        emoji: "📋", name: "QuoteCraft",       does: "Drafts itemised quotes from your scope of works — materials, labour, margins — ready for your sign-off.",           skills: ["document-reader", "pricing-db", "template-writer"] },
-  { id: "scheduler",   sector: "builder",        emoji: "📅", name: "SiteSync",         does: "Builds subcontractor schedules, sends reminders, and surfaces conflicts before they become delays.",               skills: ["calendar-mcp", "sms-notify", "gantt-builder"] },
-  { id: "invoice",     sector: "builder",        emoji: "🧾", name: "InvoiceBot",       does: "Generates invoices from completed works, chases outstanding payments, and logs receipts.",                         skills: ["template-writer", "email-drafter", "ledger-writer"] },
+  {
+    id: 'quoter',
+    sector: 'builder',
+    emoji: '📋',
+    name: 'QuoteCraft',
+    does: 'Drafts itemised quotes from your scope of works — materials, labour, margins — ready for your sign-off.',
+    skills: ['document-reader', 'pricing-db', 'template-writer'],
+  },
+  {
+    id: 'scheduler',
+    sector: 'builder',
+    emoji: '📅',
+    name: 'SiteSync',
+    does: 'Builds subcontractor schedules, sends reminders, and surfaces conflicts before they become delays.',
+    skills: ['calendar-mcp', 'sms-notify', 'gantt-builder'],
+  },
+  {
+    id: 'invoice',
+    sector: 'builder',
+    emoji: '🧾',
+    name: 'InvoiceBot',
+    does: 'Generates invoices from completed works, chases outstanding payments, and logs receipts.',
+    skills: ['template-writer', 'email-drafter', 'ledger-writer'],
+  },
 
   // ── PROPERTY AGENCY PACK ──
-  { id: "listing",     sector: "property-agency", emoji: "✍️", name: "ListingPro",      does: "Writes listing copy, recommends photo angles, and prepares the MLS-ready data sheet from your property notes.",   skills: ["copywriter", "photo-brief", "portal-formatter"] },
-  { id: "tenancy",     sector: "property-agency", emoji: "📄", name: "TenancyDrafter",  does: "Drafts tenancy agreements from standard templates, flags non-standard clauses, and prepares stamp duty notes.",    skills: ["legal-template", "clause-checker", "pdf-builder"] },
-  { id: "viewing",     sector: "property-agency", emoji: "🗓", name: "ViewingSync",     does: "Coordinates viewing slots, confirms with prospects, and updates your pipeline without double-booking.",            skills: ["calendar-mcp", "email-drafter", "crm-writer"] },
+  {
+    id: 'listing',
+    sector: 'property-agency',
+    emoji: '✍️',
+    name: 'ListingPro',
+    does: 'Writes listing copy, recommends photo angles, and prepares the MLS-ready data sheet from your property notes.',
+    skills: ['copywriter', 'photo-brief', 'portal-formatter'],
+  },
+  {
+    id: 'tenancy',
+    sector: 'property-agency',
+    emoji: '📄',
+    name: 'TenancyDrafter',
+    does: 'Drafts tenancy agreements from standard templates, flags non-standard clauses, and prepares stamp duty notes.',
+    skills: ['legal-template', 'clause-checker', 'pdf-builder'],
+  },
+  {
+    id: 'viewing',
+    sector: 'property-agency',
+    emoji: '🗓',
+    name: 'ViewingSync',
+    does: 'Coordinates viewing slots, confirms with prospects, and updates your pipeline without double-booking.',
+    skills: ['calendar-mcp', 'email-drafter', 'crm-writer'],
+  },
 
   // ── PROPERTY MANAGEMENT PACK ──
-  { id: "faultlog",    sector: "property-mgmt",   emoji: "🔧", name: "FaultLogger",     does: "Logs maintenance faults, classifies urgency, assigns to the right contractor, and notifies the tenant.",          skills: ["form-reader", "urgency-classifier", "sms-notify"] },
-  { id: "contractor",  sector: "property-mgmt",   emoji: "🏗", name: "ContractorMatch", does: "Matches faults to your approved contractor list, drafts the work order, and follows up on completion.",           skills: ["contractor-db", "email-drafter", "work-order-writer"] },
-  { id: "servicecharge", sector: "property-mgmt", emoji: "💰", name: "ChargeReconciler",does: "Reconciles service charge receipts against budgets, flags shortfalls, and drafts the annual statement.",           skills: ["ledger-reader", "reconciler", "report-builder"] },
+  {
+    id: 'faultlog',
+    sector: 'property-mgmt',
+    emoji: '🔧',
+    name: 'FaultLogger',
+    does: 'Logs maintenance faults, classifies urgency, assigns to the right contractor, and notifies the tenant.',
+    skills: ['form-reader', 'urgency-classifier', 'sms-notify'],
+  },
+  {
+    id: 'contractor',
+    sector: 'property-mgmt',
+    emoji: '🏗',
+    name: 'ContractorMatch',
+    does: 'Matches faults to your approved contractor list, drafts the work order, and follows up on completion.',
+    skills: ['contractor-db', 'email-drafter', 'work-order-writer'],
+  },
+  {
+    id: 'servicecharge',
+    sector: 'property-mgmt',
+    emoji: '💰',
+    name: 'ChargeReconciler',
+    does: 'Reconciles service charge receipts against budgets, flags shortfalls, and drafts the annual statement.',
+    skills: ['ledger-reader', 'reconciler', 'report-builder'],
+  },
 
   // ── RESTAURANT PACK ──
-  { id: "stock",       sector: "restaurant",      emoji: "📦", name: "StockSense",      does: "Reads your POS and delivery notes, computes daily variance, and flags what to reorder before you run out.",        skills: ["pos-reader", "stock-calc", "reorder-drafter"] },
-  { id: "supplier",    sector: "restaurant",      emoji: "🚚", name: "SupplierRelay",   does: "Drafts reorder messages to each supplier in their preferred format — WhatsApp, email, or fax template.",           skills: ["email-drafter", "whatsapp-notify", "supplier-db"] },
-  { id: "reservation", sector: "restaurant",      emoji: "🍽", name: "TableSync",       does: "Manages reservations, sends confirmation messages, and updates the floor plan without clashes.",                   skills: ["calendar-mcp", "sms-notify", "floor-planner"] },
+  {
+    id: 'stock',
+    sector: 'restaurant',
+    emoji: '📦',
+    name: 'StockSense',
+    does: 'Reads your POS and delivery notes, computes daily variance, and flags what to reorder before you run out.',
+    skills: ['pos-reader', 'stock-calc', 'reorder-drafter'],
+  },
+  {
+    id: 'supplier',
+    sector: 'restaurant',
+    emoji: '🚚',
+    name: 'SupplierRelay',
+    does: 'Drafts reorder messages to each supplier in their preferred format — WhatsApp, email, or fax template.',
+    skills: ['email-drafter', 'whatsapp-notify', 'supplier-db'],
+  },
+  {
+    id: 'reservation',
+    sector: 'restaurant',
+    emoji: '🍽',
+    name: 'TableSync',
+    does: 'Manages reservations, sends confirmation messages, and updates the floor plan without clashes.',
+    skills: ['calendar-mcp', 'sms-notify', 'floor-planner'],
+  },
 
   // ── ACCOUNTING PACK ──
-  { id: "bookkeeping", sector: "accounting",      emoji: "📚", name: "BookBot",         does: "Drafts journal entries from invoices, receipts, and bank lines — coded to your chart of accounts.",               skills: ["ocr-reader", "gl-coder", "journal-writer"] },
-  { id: "reconciler",  sector: "accounting",      emoji: "🔁", name: "Reconciler",      does: "Matches bank transactions to ledger entries, flags unmatched lines, and builds the reconciliation schedule.",      skills: ["bank-reader", "ledger-reader", "match-engine"] },
-  { id: "reporter",    sector: "accounting",      emoji: "📊", name: "CloseBuilder",    does: "Assembles the month-end pack — trial balance, P&L, and cash-flow — with every figure traced to a source.",       skills: ["report-builder", "tb-compiler", "pdf-builder"] },
+  {
+    id: 'bookkeeping',
+    sector: 'accounting',
+    emoji: '📚',
+    name: 'BookBot',
+    does: 'Drafts journal entries from invoices, receipts, and bank lines — coded to your chart of accounts.',
+    skills: ['ocr-reader', 'gl-coder', 'journal-writer'],
+  },
+  {
+    id: 'reconciler',
+    sector: 'accounting',
+    emoji: '🔁',
+    name: 'Reconciler',
+    does: 'Matches bank transactions to ledger entries, flags unmatched lines, and builds the reconciliation schedule.',
+    skills: ['bank-reader', 'ledger-reader', 'match-engine'],
+  },
+  {
+    id: 'reporter',
+    sector: 'accounting',
+    emoji: '📊',
+    name: 'CloseBuilder',
+    does: 'Assembles the month-end pack — trial balance, P&L, and cash-flow — with every figure traced to a source.',
+    skills: ['report-builder', 'tb-compiler', 'pdf-builder'],
+  },
 ];
 ```
 
@@ -416,14 +522,14 @@ Trustworthy by design.
 Not guidelines — rules every agent enforces on every run.
 ```
 
-| Icon | Pillar | Body |
-|---|---|---|
-| ✋ | **Drafts, not actions** | No quote is sent, no payment released, and no message goes to a tenant until a person approves it. Every agent output waits at a human gate. |
-| 🔗 | **Trace it or compute it** | Every figure comes from a source document or a calculation. The agents never fill in plausible-looking numbers. |
-| 🔒 | **Your data stays yours** | Client records, supplier contacts, and business history are hosted on infrastructure you control — never pooled or used to train a shared model. |
-| 🧱 | **Agents run in isolation** | Each specialist agent runs in its own container. A restaurant agent cannot see a property management record. Cross-client leakage is architecturally impossible. |
-| 📋 | **Full audit trail** | Every action is logged with a timestamp, agent ID, input, output, and confidence score. You can trace any decision back to the second it was made. |
-| 👤 | **You post. You send. You sign.** | Agents surface the draft. You make the call. Consequential actions — sending emails, filing documents, posting entries — require your explicit approval. |
+| Icon | Pillar                            | Body                                                                                                                                                             |
+| ---- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✋   | **Drafts, not actions**           | No quote is sent, no payment released, and no message goes to a tenant until a person approves it. Every agent output waits at a human gate.                     |
+| 🔗   | **Trace it or compute it**        | Every figure comes from a source document or a calculation. The agents never fill in plausible-looking numbers.                                                  |
+| 🔒   | **Your data stays yours**         | Client records, supplier contacts, and business history are hosted on infrastructure you control — never pooled or used to train a shared model.                 |
+| 🧱   | **Agents run in isolation**       | Each specialist agent runs in its own container. A restaurant agent cannot see a property management record. Cross-client leakage is architecturally impossible. |
+| 📋   | **Full audit trail**              | Every action is logged with a timestamp, agent ID, input, output, and confidence score. You can trace any decision back to the second it was made.               |
+| 👤   | **You post. You send. You sign.** | Agents surface the draft. You make the call. Consequential actions — sending emails, filing documents, posting entries — require your explicit approval.         |
 
 Card styling: `--clr-slate` background, left `3px` border in `--clr-jade`, `--radius-card`, icon 24px, headline `--font-display` 16px weight 600.
 
@@ -530,6 +636,7 @@ interface SidebarProps {
 ```
 
 Sections:
+
 - **+ New conversation** button (amber, full width)
 - **Recent conversations** list — title, status badge (✅ done / 🔴 needs review / ⏳ in progress)
 - **Active agents** — green dot indicator per loaded agent
@@ -540,22 +647,23 @@ Sections:
 Messages follow this pattern:
 
 ```tsx
-type MessageRole = "user" | "orchestrator" | "agent" | "system";
+type MessageRole = 'user' | 'orchestrator' | 'agent' | 'system';
 
 interface Message {
   id: string;
   role: MessageRole;
-  agentName?: string;       // e.g. "QuoteCraft"
+  agentName?: string; // e.g. "QuoteCraft"
   agentEmoji?: string;
   content: string;
-  confidence?: "High" | "Medium" | "Low";
+  confidence?: 'High' | 'Medium' | 'Low';
   requiresReview?: boolean;
-  sources?: string[];       // e.g. ["Invoice_WW2024-03.pdf", "PriceList_Q1.xlsx"]
+  sources?: string[]; // e.g. ["Invoice_WW2024-03.pdf", "PriceList_Q1.xlsx"]
   timestamp: Date;
 }
 ```
 
 **Message bubble styles**:
+
 - `user`: right-aligned, `--clr-amber` background, dark text
 - `orchestrator` (NEXUS): left-aligned, `--clr-mist` background, `--clr-fog` label "NEXUS"
 - `agent`: left-aligned, `--clr-slate` background, agent name + emoji label, monospace content for structured data
@@ -620,6 +728,7 @@ Filter bar: [ All ] [ Builder ] [ Property Agency ] [ Property Mgmt ] [ Restaura
 Agent cards (reuse sector card data from §3.6) displayed in a responsive grid.
 
 Each card expands on click to show:
+
 - Full description
 - System prompt preview (first 200 chars, monospace)
 - Skills used (badges)
@@ -641,6 +750,7 @@ Grid of skill cards (full detail — name, description, input/output schema prev
 ```
 
 Each skill card shows:
+
 ```
 ┌────────────────────────────────┐
 │  📄  document-reader           │
@@ -662,16 +772,16 @@ Each skill card shows:
 
 Every agent system prompt built for this platform **must** satisfy the eight criteria. Use this checklist when authoring or reviewing system prompts in `SUBAGENT_*.md` files:
 
-| # | Criterion | What to check |
-|---|---|---|
-| 1 | **Clear** | Single sentence states the agent's job, sector, and scope. No ambiguity about what it does and does not do. |
-| 2 | **Relevant** | Prompt contains only facts, rules, and context the agent actually needs. No padding. |
-| 3 | **Informative** | Concrete output format specified (JSON schema, prose template, or table). Agent knows what "done" looks like. |
-| 4 | **Emotional aspect** | Acknowledges the human stakes — owner-operator pressure, time sensitivity, trust. Tone is reassuring, not robotic. |
-| 5 | **Resourceful** | Lists which MCP tools and skills the agent may invoke. Fallback behaviour specified if a source document is missing. |
-| 6 | **Colourful** | Uses vivid, domain-specific vocabulary ("scope of works", "variation order", "service charge schedule") rather than generic AI language. |
-| 7 | **Care for human society** | Includes HITL gate rule: agent must never send, post, or file without human approval. Data privacy reminder included. |
-| 8 | **Well-defined target user** | Prompt names the user role: "a sole-trader builder in HK", "a two-person property agency in Singapore", etc. |
+| #   | Criterion                    | What to check                                                                                                                            |
+| --- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Clear**                    | Single sentence states the agent's job, sector, and scope. No ambiguity about what it does and does not do.                              |
+| 2   | **Relevant**                 | Prompt contains only facts, rules, and context the agent actually needs. No padding.                                                     |
+| 3   | **Informative**              | Concrete output format specified (JSON schema, prose template, or table). Agent knows what "done" looks like.                            |
+| 4   | **Emotional aspect**         | Acknowledges the human stakes — owner-operator pressure, time sensitivity, trust. Tone is reassuring, not robotic.                       |
+| 5   | **Resourceful**              | Lists which MCP tools and skills the agent may invoke. Fallback behaviour specified if a source document is missing.                     |
+| 6   | **Colourful**                | Uses vivid, domain-specific vocabulary ("scope of works", "variation order", "service charge schedule") rather than generic AI language. |
+| 7   | **Care for human society**   | Includes HITL gate rule: agent must never send, post, or file without human approval. Data privacy reminder included.                    |
+| 8   | **Well-defined target user** | Prompt names the user role: "a sole-trader builder in HK", "a two-person property agency in Singapore", etc.                             |
 
 ---
 
@@ -800,5 +910,5 @@ Output: a working Next.js project ready to deploy to Vercel.
 
 ---
 
-*Document version: 1.0 · June 2026 · AIbyML.com SG Ltd.*  
-*Authored as a Clawix platform build specification.*
+_Document version: 1.0 · June 2026 · AIbyML.com SG Ltd._  
+_Authored as a Clawix platform build specification._

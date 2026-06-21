@@ -2,7 +2,7 @@
 name: bank-reconciliation
 description: How the firm reconciles bank, credit-card, intercompany, and clearing accounts. Auto-match thresholds, handling of timing items, treatment of bank charges and FX, and the rule that plug entries are forbidden. Read by reconciliation, audit.
 user-invocable: true
-metadata: { "openclaw": { "always": false, "emoji": "🏦" } }
+metadata: { 'openclaw': { 'always': false, 'emoji': '🏦' } }
 ---
 
 # Reconciliation, the firm's way
@@ -46,15 +46,15 @@ Anything weaker becomes a "proposed match — needs confirmation" line.
 
 ## Genuine differences (these become JE drafts)
 
-| Cause | JE drafted by reconciliation agent? |
-|---|---|
-| Bank charges | yes |
-| Bank interest received/paid | yes |
-| FX revaluation | yes (using policy spot) |
-| Returned cheque / failed direct debit | yes (reverse the original) |
-| Duplicate posting | no — finding |
-| Misposting | no — finding (bookkeeping fixes) |
-| Fraud signal | no — finding (audit takes it; do not draft) |
+| Cause                                 | JE drafted by reconciliation agent?         |
+| ------------------------------------- | ------------------------------------------- |
+| Bank charges                          | yes                                         |
+| Bank interest received/paid           | yes                                         |
+| FX revaluation                        | yes (using policy spot)                     |
+| Returned cheque / failed direct debit | yes (reverse the original)                  |
+| Duplicate posting                     | no — finding                                |
+| Misposting                            | no — finding (bookkeeping fixes)            |
+| Fraud signal                          | no — finding (audit takes it; do not draft) |
 
 ## Plug entries are forbidden
 

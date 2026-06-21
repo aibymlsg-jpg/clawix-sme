@@ -137,25 +137,28 @@ export default function ProjectorPage() {
     };
   }, [t]);
 
-  const openItem = useCallback(async (name: string) => {
-    setLoadingHtml(true);
-    setActiveItem(name);
-    setActiveHtml(null);
-    setSaveStatus('');
-    setSaveKind('');
-    try {
-      const res = await authFetch<{
-        success: boolean;
-        data: { name: string; html: string };
-      }>(`/api/v1/workspace/projector/${encodeURIComponent(name)}`);
-      setActiveHtml(res.data.html);
-    } catch {
-      setError(t('projector.loadItemError', { name }));
-      setActiveItem(null);
-    } finally {
-      setLoadingHtml(false);
-    }
-  }, [t]);
+  const openItem = useCallback(
+    async (name: string) => {
+      setLoadingHtml(true);
+      setActiveItem(name);
+      setActiveHtml(null);
+      setSaveStatus('');
+      setSaveKind('');
+      try {
+        const res = await authFetch<{
+          success: boolean;
+          data: { name: string; html: string };
+        }>(`/api/v1/workspace/projector/${encodeURIComponent(name)}`);
+        setActiveHtml(res.data.html);
+      } catch {
+        setError(t('projector.loadItemError', { name }));
+        setActiveItem(null);
+      } finally {
+        setLoadingHtml(false);
+      }
+    },
+    [t],
+  );
 
   const closeViewer = useCallback(() => {
     setActiveItem(null);

@@ -413,7 +413,9 @@ export default function GroupsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('groups.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>{t('groups.confirm.action')}</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirm}>
+              {t('groups.confirm.action')}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

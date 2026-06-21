@@ -19,8 +19,15 @@ import { ProviderConfigService } from '../provider-config/provider-config.servic
 
 // Models to exclude from the dynamic list (embeddings, audio, image, etc.)
 const EXCLUDE_MODEL_PREFIXES = [
-  'text-embedding', 'tts-', 'whisper-', 'dall-e', 'davinci-',
-  'babbage-', 'curie-', 'ada-', 'cushman-',
+  'text-embedding',
+  'tts-',
+  'whisper-',
+  'dall-e',
+  'davinci-',
+  'babbage-',
+  'curie-',
+  'ada-',
+  'cushman-',
 ];
 
 @Injectable()
@@ -42,17 +49,24 @@ export class AgentsService {
     // Anthropic has no public models endpoint — return known models
     if (providerName === 'anthropic') {
       return [
-        'claude-opus-4-7', 'claude-sonnet-4-6', 'claude-haiku-4-5',
-        'claude-opus-4', 'claude-sonnet-4', 'claude-haiku-4',
+        'claude-opus-4-7',
+        'claude-sonnet-4-6',
+        'claude-haiku-4-5',
+        'claude-opus-4',
+        'claude-sonnet-4',
+        'claude-haiku-4',
       ];
     }
 
     // Gemini
     if (providerName === 'gemini') {
-      const base = apiBaseUrl?.replace(/\/$/, '') ?? 'https://generativelanguage.googleapis.com/v1beta';
+      const base =
+        apiBaseUrl?.replace(/\/$/, '') ?? 'https://generativelanguage.googleapis.com/v1beta';
       const res = await fetch(`${base}/models?key=${apiKey}`);
       if (!res.ok) return [];
-      const json = await res.json() as { models?: { name: string; supportedGenerationMethods?: string[] }[] };
+      const json = (await res.json()) as {
+        models?: { name: string; supportedGenerationMethods?: string[] }[];
+      };
       return (json.models ?? [])
         .filter((m) => m.supportedGenerationMethods?.includes('generateContent'))
         .map((m) => m.name.replace('models/', ''))
@@ -65,7 +79,7 @@ export class AgentsService {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
     if (!res.ok) return [];
-    const json = await res.json() as { data?: { id: string }[] };
+    const json = (await res.json()) as { data?: { id: string }[] };
     return (json.data ?? [])
       .map((m) => m.id)
       .filter((id) => !EXCLUDE_MODEL_PREFIXES.some((prefix) => id.startsWith(prefix)))
