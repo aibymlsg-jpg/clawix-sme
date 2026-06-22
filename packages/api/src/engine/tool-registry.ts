@@ -284,7 +284,7 @@ export class ToolRegistry {
     ctx?: ToolExecuteContext,
   ): Promise<ToolResult> {
     try {
-      const result = await tool.execute(params, ctx);
+      const result = await this.raceAbort(tool.execute(params, ctx), ctx?.abortSignal, tool.name);
       const output = this.truncate(result.output);
 
       if (result.isError) {
@@ -303,6 +303,38 @@ export class ToolRegistry {
         isError: true,
       };
     }
+  }
+
+  /**
+   * Race a tool's execute() promise against its abort signal.
+   *
+   * Some tools can hang somewhere their internal timeout doesn't cover (e.g.
+   * an SSRF check's DNS lookup before the tool's own HTTP timeout is even
+   * armed). A tool that never accepts/checks `ctx.abortSignal` would then
+   * block the reasoning loop forever, since nothing else interrupts an
+   * in-flight `await`. This is the backstop: if the signal fires first, we
+   * resolve with an error result and abandon the still-pending tool promise
+   * — its eventual settlement is swallowed since nothing awaits it anymore.
+   */
+  private raceAbort(
+    promise: Promise<ToolResult>,
+    signal: AbortSignal | undefined,
+    toolName: string,
+  ): Promise<ToolResult> {
+    if (!signal) return promise;
+    if (signal.aborted) {
+      return Promise.reject(new Error(`Tool "${toolName}" aborted before it started`));
+    }
+
+    return new Promise<ToolResult>((resolve, reject) => {
+      const onAbort = (): void => {
+        reject(new Error(`Tool "${toolName}" aborted (timeout or user stop)`));
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
+      promise.then(resolve, reject).finally(() => {
+        signal.removeEventListener('abort', onAbort);
+      });
+    });
   }
 
   /** Truncate output if it exceeds maxOutputChars. */

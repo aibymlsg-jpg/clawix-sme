@@ -554,4 +554,66 @@ describe('execute with abortSignal context', () => {
     const result = await registry.execute('noop', {});
     expect(result.isError).toBe(false);
   });
+
+  it('returns an error result once the abort signal fires, even if the tool ignores it and never settles', async () => {
+    const registry = new ToolRegistry();
+    registry.register({
+      name: 'hangs',
+      description: '',
+      parameters: { type: 'object', properties: {} },
+      // Never resolves/rejects and doesn't read ctx — simulates a tool with
+      // a gap before its own internal timeout protection kicks in.
+      async execute() {
+        return new Promise<never>(() => {});
+      },
+    });
+
+    const controller = new AbortController();
+    const resultPromise = registry.execute('hangs', {}, { abortSignal: controller.signal });
+    controller.abort();
+
+    const result = await resultPromise;
+    expect(result.isError).toBe(true);
+    expect(result.output).toContain('aborted');
+  });
+
+  it('returns an error result immediately if the signal is already aborted', async () => {
+    const registry = new ToolRegistry();
+    let executed = false;
+    registry.register({
+      name: 'hangs',
+      description: '',
+      parameters: { type: 'object', properties: {} },
+      async execute() {
+        executed = true;
+        return new Promise<never>(() => {});
+      },
+    });
+
+    const controller = new AbortController();
+    controller.abort();
+    const result = await registry.execute('hangs', {}, { abortSignal: controller.signal });
+
+    expect(result.isError).toBe(true);
+    expect(result.output).toContain('aborted');
+    expect(executed).toBe(true);
+  });
+
+  it('still returns the tool result normally when the signal never fires', async () => {
+    const registry = new ToolRegistry();
+    registry.register({
+      name: 'fine',
+      description: '',
+      parameters: { type: 'object', properties: {} },
+      async execute() {
+        return { output: 'done', isError: false };
+      },
+    });
+
+    const controller = new AbortController();
+    const result = await registry.execute('fine', {}, { abortSignal: controller.signal });
+
+    expect(result.isError).toBe(false);
+    expect(result.output).toBe('done');
+  });
 });

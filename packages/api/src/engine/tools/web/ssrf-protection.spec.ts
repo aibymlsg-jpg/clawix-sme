@@ -72,6 +72,19 @@ describe('validateUrl — internal allowlist', () => {
   });
 });
 
+describe('validateUrl — DNS timeout', () => {
+  it(
+    'rejects instead of hanging forever when the DNS lookup never settles',
+    async () => {
+      const dns = await import('dns');
+      vi.mocked(dns.promises.lookup).mockImplementation(() => new Promise(() => {}));
+
+      await expect(validateUrl('http://slow-dns.example/')).rejects.toThrow(/timed out/i);
+    },
+    8_000,
+  );
+});
+
 describe('validateUrl allowlistEnv option', () => {
   afterEach(() => {
     delete process.env['MCP_INTERNAL_ALLOWLIST'];

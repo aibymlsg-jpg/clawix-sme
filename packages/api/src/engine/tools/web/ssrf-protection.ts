@@ -12,6 +12,36 @@ import { createLogger } from '@clawix/shared';
 
 const logger = createLogger('engine:tools:web:ssrf');
 
+/** Max time to wait for hostname resolution before failing closed. */
+const DNS_LOOKUP_TIMEOUT_MS = 5_000;
+
+/**
+ * `dns.promises.lookup()` has no built-in timeout — a slow or unresponsive
+ * resolver can hang the call indefinitely. Race it against a timer so a bad
+ * lookup fails fast instead of blocking the calling tool (and the whole
+ * reasoning-loop turn) forever.
+ */
+function lookupWithTimeout(
+  hostname: string,
+  timeoutMs: number,
+): Promise<{ address: string; family: number }> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`DNS lookup for "${hostname}" timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+    dns.promises.lookup(hostname).then(
+      (result) => {
+        clearTimeout(timer);
+        resolve(result);
+      },
+      (err: unknown) => {
+        clearTimeout(timer);
+        reject(err instanceof Error ? err : new Error(String(err)));
+      },
+    );
+  });
+}
+
 /** Result of a successful URL validation. */
 export interface ValidatedUrl {
   readonly hostname: string;
@@ -161,7 +191,7 @@ export async function validateUrl(url: string, opts?: ValidateUrlOptions): Promi
   }
 
   // Step 5: Resolve hostname to IP
-  const { address, family } = await dns.promises.lookup(parsed.hostname);
+  const { address, family } = await lookupWithTimeout(parsed.hostname, DNS_LOOKUP_TIMEOUT_MS);
 
   const defaultPort = parsed.protocol === 'https:' ? 443 : 80;
   const port = parsed.port ? Number(parsed.port) : defaultPort;
