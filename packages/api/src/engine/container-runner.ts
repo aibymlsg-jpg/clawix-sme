@@ -469,7 +469,10 @@ export function buildDockerRunArgs(params: DockerRunArgsParams): string[] {
 
 /**
  * Scan for clawix-agent containers that have exceeded 2× their labeled timeout
- * and kill them. Intended to be called on startup or by a periodic cron.
+ * and kill them. Called on startup and on every ContainerPoolService health
+ * check tick — the periodic call is what catches containers orphaned by a
+ * process restart mid-run (AgentRunRegistry's in-memory bookkeeping for that
+ * run is gone, so the stale-run reaper's forceStopContainer is a no-op for it).
  */
 export async function cleanupOrphanContainers(): Promise<void> {
   const cleanupLogger = createLogger('engine:container-runner:cleanup');

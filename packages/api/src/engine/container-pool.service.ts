@@ -398,6 +398,11 @@ export class ContainerPoolService implements OnModuleInit, OnModuleDestroy {
   // ---------------------------------------------------------------- //
 
   private async runHealthCheck(): Promise<void> {
+    // Cross-process backstop: catches containers from runs whose owning
+    // process died/restarted mid-run, so they don't outlive their label's
+    // timeout indefinitely waiting for the next boot's one-shot sweep.
+    await cleanupOrphanContainers();
+
     for (const [sessionId, entry] of this.pool) {
       if (entry.status !== 'idle') continue;
 
