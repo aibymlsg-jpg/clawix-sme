@@ -80,6 +80,58 @@ describe('SearchProviderRegistry', () => {
     });
   });
 
+  describe('hard-timeout backstop', () => {
+    it('falls through to the next provider when the first hangs past its hard timeout', async () => {
+      vi.useFakeTimers();
+      try {
+        const hung: SearchProvider = {
+          name: 'hung',
+          timeoutMs: 10_000,
+          search: vi.fn().mockReturnValue(new Promise(() => {})), // never settles
+        };
+        const second = makeMockProvider('second', MOCK_RESULTS_ALT);
+
+        const registry = new SearchProviderRegistry();
+        registry.addProvider(hung);
+        registry.addProvider(second);
+
+        // Attach the assertion before advancing timers so the rejection that
+        // fires partway through (the hung provider's backstop) is never
+        // momentarily unhandled.
+        const assertion = expect(registry.search('hello', 5)).resolves.toEqual(MOCK_RESULTS_ALT);
+        // Hard timeout = declared timeoutMs (10s) + margin (10s) = 20s.
+        await vi.advanceTimersByTimeAsync(20_000);
+
+        await assertion;
+        expect(second.search).toHaveBeenCalledWith('hello', 5);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('uses the default 10s timeout when a provider does not declare timeoutMs', async () => {
+      vi.useFakeTimers();
+      try {
+        const hung: SearchProvider = {
+          name: 'hung',
+          search: vi.fn().mockReturnValue(new Promise(() => {})),
+        };
+
+        const registry = new SearchProviderRegistry();
+        registry.addProvider(hung);
+
+        const assertion = expect(registry.search('hello', 5)).rejects.toThrow(
+          'All search providers failed',
+        );
+        await vi.advanceTimersByTimeAsync(20_000);
+
+        await assertion;
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
   describe('concurrency semaphore', () => {
     it('limits concurrent calls to 3', async () => {
       let concurrentCount = 0;

@@ -29,6 +29,7 @@ interface BraveWebSearchResponse {
 
 export class BraveSearchProvider implements SearchProvider {
   readonly name = 'brave';
+  readonly timeoutMs = REQUEST_TIMEOUT_MS;
 
   private readonly apiKey: string;
   private readonly maxResults: number;

@@ -13,6 +13,18 @@ const logger = createLogger('engine:tools:web:search-provider');
 /** Maximum concurrent search requests. */
 const MAX_CONCURRENT_SEARCHES = 3;
 
+/** Fallback bound for providers that don't declare their own `timeoutMs`. */
+const DEFAULT_PROVIDER_TIMEOUT_MS = 10_000;
+
+/**
+ * Independent backstop added above each provider's own timeout. Mirrors the
+ * web_fetch hard-timeout fix: a provider's `AbortSignal.timeout()` can fail
+ * to unblock `fetch()` if the hang is below the promise (e.g. dispatcher
+ * teardown not wired to the signal), so the chain can't rely on a provider's
+ * internal timeout firing on its own.
+ */
+const HARD_TIMEOUT_MARGIN_MS = 10_000;
+
 /** A single search result. */
 export interface SearchResult {
   readonly title: string;
@@ -23,6 +35,8 @@ export interface SearchResult {
 /** Interface for pluggable search backends. */
 export interface SearchProvider {
   readonly name: string;
+  /** Provider's own request timeout (ms); sizes the registry's hard-timeout backstop. Defaults to 10s if omitted. */
+  readonly timeoutMs?: number;
   search(query: string, count: number): Promise<readonly SearchResult[]>;
 }
 
@@ -82,7 +96,7 @@ export class SearchProviderRegistry {
 
     for (const provider of this.chain) {
       try {
-        const results = await provider.search(query, count);
+        const results = await this.raceHardTimeout(provider, query, count);
         return results;
       } catch (err: unknown) {
         lastError = err instanceof Error ? err : new Error(String(err));
@@ -94,6 +108,33 @@ export class SearchProviderRegistry {
     }
 
     throw new Error(`All search providers failed. Last error: ${lastError?.message ?? 'unknown'}`);
+  }
+
+  /**
+   * Race a provider's search() against an independent hard timer above its
+   * own declared timeout. A provider stuck below its own timeout's promise
+   * would otherwise block the whole chain — and the reasoning loop — until
+   * the stale-run reaper's 10-minute sweep. Abandoning the still-pending
+   * call here lets the chain fall through to the next provider instead;
+   * its eventual settlement is swallowed since nothing awaits it anymore.
+   */
+  private raceHardTimeout(
+    provider: SearchProvider,
+    query: string,
+    count: number,
+  ): Promise<readonly SearchResult[]> {
+    const timeoutMs = (provider.timeoutMs ?? DEFAULT_PROVIDER_TIMEOUT_MS) + HARD_TIMEOUT_MARGIN_MS;
+
+    return new Promise<readonly SearchResult[]>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(`Provider "${provider.name}" did not complete within ${timeoutMs}ms`));
+      }, timeoutMs);
+
+      provider
+        .search(query, count)
+        .then(resolve, reject)
+        .finally(() => clearTimeout(timer));
+    });
   }
 
   // ── Semaphore internals ────────────────────────────────────────────

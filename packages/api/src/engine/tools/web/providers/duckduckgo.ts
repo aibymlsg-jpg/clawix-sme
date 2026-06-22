@@ -61,6 +61,7 @@ function decodeRedirectUrl(href: string): string {
 
 export class DuckDuckGoProvider implements SearchProvider {
   readonly name = 'duckduckgo';
+  readonly timeoutMs = REQUEST_TIMEOUT_MS;
 
   async search(query: string, count: number): Promise<readonly SearchResult[]> {
     logger.info({ query, count }, 'DuckDuckGo search');
