@@ -1,5 +1,5 @@
 // packages/api/src/engine/tools/web/web-fetch.spec.ts
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 
 import { createWebFetchTool } from './web-fetch.js';
@@ -128,5 +128,31 @@ describe('web_fetch — PDF routing', () => {
 
     expect(result.isError).toBe(false);
     expect(result.output).toContain('Hello PDF');
+  });
+});
+
+describe('web_fetch — hard timeout backstop', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('resolves with an error instead of hanging forever when undici never settles', async () => {
+    // Simulates the live incident: the AbortController-based FETCH_TIMEOUT_MS
+    // never fired (hang below the fetch() promise, e.g. dispatcher teardown),
+    // so the outer hard timeout is the only thing that can unblock the loop.
+    mockUndiciFetch.mockImplementation(() => new Promise(() => {}));
+
+    const tool = createWebFetchTool();
+    const resultPromise = tool.execute({ url: 'https://example.com/stuck' });
+
+    await vi.advanceTimersByTimeAsync(40_000);
+    const result = await resultPromise;
+
+    expect(result.isError).toBe(true);
+    expect(result.output).toMatch(/did not complete within/i);
   });
 });

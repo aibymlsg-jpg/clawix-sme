@@ -20,6 +20,14 @@ const logger = createLogger('engine:tools:web:fetch');
 
 const DEFAULT_MAX_CHARS = 50_000;
 const FETCH_TIMEOUT_MS = 30_000;
+// Independent backstop above FETCH_TIMEOUT_MS: a run was observed stuck for
+// 10+ minutes on a fetch whose own AbortController-based timeout never fired
+// (likely a hang in dispatcher teardown or an undici internal not wired to
+// our signal) — confirmed live, with the identical URL completing in <100ms
+// in isolation. Racing the whole operation against a hard deadline bounds
+// the tool call regardless of *where* internally it gets stuck, instead of
+// relying on every internal await to honor the abort signal correctly.
+const HARD_TIMEOUT_MS = FETCH_TIMEOUT_MS + 10_000;
 const MAX_RESPONSE_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_REDIRECTS = 5;
 const USER_AGENT = 'Clawix/1.0';
@@ -66,96 +74,120 @@ export function createWebFetchTool(): Tool {
 
       logger.info({ url, maxChars }, 'web_fetch invoked');
 
+      const hardTimeout = createHardTimeout(url);
       try {
-        // Step 1: SSRF validation — resolves DNS and checks IP ranges
-        const validated = await validateUrl(url);
-
-        // Step 2: Create a DNS-pinned undici Agent to prevent DNS rebinding.
-        // The Agent's connect.lookup returns the pre-validated IP, ensuring
-        // the actual TCP connection goes to the same IP that passed SSRF checks.
-        const dispatcher = new Agent({
-          connect: {
-            lookup: (_hostname, _options, callback) => {
-              callback(null, [
-                {
-                  address: validated.resolvedIp,
-                  family: validated.resolvedIp.includes(':') ? 6 : 4,
-                },
-              ]);
-            },
-          },
-        });
-
-        // Step 3: Fetch with timeout, DNS pinning, and redirect limit.
-        // The same controller covers both the request/headers phase AND the
-        // body-read phase — slow-streaming endpoints (live-news pages, SSE,
-        // long-poll) can return headers fast but stall the body, so the
-        // timeout must remain armed until the body has been fully read.
-        const controller = new AbortController();
-        const timeout = setTimeout(() => {
-          controller.abort();
-        }, FETCH_TIMEOUT_MS);
-
-        try {
-          const response = await undiciFetch(url, {
-            signal: controller.signal,
-            headers: {
-              'User-Agent': USER_AGENT,
-            },
-            dispatcher,
-            redirect: 'follow',
-            maxRedirections: MAX_REDIRECTS,
-          } as Parameters<typeof undiciFetch>[1]);
-
-          if (!response.ok) {
-            return {
-              output: `Fetch failed: HTTP ${response.status} for ${url}`,
-              isError: true,
-            };
-          }
-
-          // Step 4: Read body as raw bytes with streaming size enforcement.
-          const bytes = await readBodyBytes(response, MAX_RESPONSE_BYTES, controller.signal);
-
-          // Step 5: Extract content based on whether this is a PDF.
-          // Capture byteLength before extractPdf — pdfjs-dist transfers (detaches)
-          // the underlying ArrayBuffer, which zeros out bytes.byteLength after the call.
-          const contentType = response.headers.get('content-type') ?? 'text/plain';
-          const isPdf = isPdfResponse(url, contentType);
-          const contentLength = bytes.byteLength;
-          const extracted = isPdf
-            ? await extractPdf(bytes, maxChars)
-            : extractContent(bytesToText(bytes), contentType, maxChars);
-
-          // Step 6: Format output
-          const titleLine = extracted.title
-            ? `Title: ${extracted.title}\nURL: ${url}\n\n`
-            : `URL: ${url}\n\n`;
-          const output = titleLine + extracted.content;
-
-          logger.info(
-            {
-              url,
-              contentType,
-              isPdf,
-              contentLength,
-              extractedLength: extracted.content.length,
-            },
-            'web_fetch completed',
-          );
-
-          return { output, isError: false };
-        } finally {
-          clearTimeout(timeout);
-          await dispatcher.close();
-        }
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        logger.error({ url, error: message }, 'web_fetch failed');
-        return { output: `Fetch failed: ${message}`, isError: true };
+        return await Promise.race([fetchAndExtract(url, maxChars), hardTimeout.promise]);
+      } finally {
+        hardTimeout.cancel();
       }
     },
   };
+}
+
+/** A timer that resolves to an error ToolResult after {@link HARD_TIMEOUT_MS}; cancel() once the real work settles so a fast call doesn't leave a stray timer logging a false "exceeded" later. */
+function createHardTimeout(url: string): { promise: Promise<ToolResult>; cancel: () => void } {
+  let timer: NodeJS.Timeout;
+  const promise = new Promise<ToolResult>((resolve) => {
+    timer = setTimeout(() => {
+      logger.error({ url, timeoutMs: HARD_TIMEOUT_MS }, 'web_fetch exceeded hard timeout');
+      resolve({
+        output: `Fetch failed: web_fetch did not complete within ${HARD_TIMEOUT_MS}ms for ${url}`,
+        isError: true,
+      });
+    }, HARD_TIMEOUT_MS);
+  });
+  return { promise, cancel: () => clearTimeout(timer) };
+}
+
+async function fetchAndExtract(url: string, maxChars: number): Promise<ToolResult> {
+  try {
+    // Step 1: SSRF validation — resolves DNS and checks IP ranges
+    const validated = await validateUrl(url);
+
+    // Step 2: Create a DNS-pinned undici Agent to prevent DNS rebinding.
+    // The Agent's connect.lookup returns the pre-validated IP, ensuring
+    // the actual TCP connection goes to the same IP that passed SSRF checks.
+    const dispatcher = new Agent({
+      connect: {
+        lookup: (_hostname, _options, callback) => {
+          callback(null, [
+            {
+              address: validated.resolvedIp,
+              family: validated.resolvedIp.includes(':') ? 6 : 4,
+            },
+          ]);
+        },
+      },
+    });
+
+    // Step 3: Fetch with timeout, DNS pinning, and redirect limit.
+    // The same controller covers both the request/headers phase AND the
+    // body-read phase — slow-streaming endpoints (live-news pages, SSE,
+    // long-poll) can return headers fast but stall the body, so the
+    // timeout must remain armed until the body has been fully read.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, FETCH_TIMEOUT_MS);
+
+    try {
+      const response = await undiciFetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': USER_AGENT,
+        },
+        dispatcher,
+        redirect: 'follow',
+        maxRedirections: MAX_REDIRECTS,
+      } as Parameters<typeof undiciFetch>[1]);
+
+      if (!response.ok) {
+        return {
+          output: `Fetch failed: HTTP ${response.status} for ${url}`,
+          isError: true,
+        };
+      }
+
+      // Step 4: Read body as raw bytes with streaming size enforcement.
+      const bytes = await readBodyBytes(response, MAX_RESPONSE_BYTES, controller.signal);
+
+      // Step 5: Extract content based on whether this is a PDF.
+      // Capture byteLength before extractPdf — pdfjs-dist transfers (detaches)
+      // the underlying ArrayBuffer, which zeros out bytes.byteLength after the call.
+      const contentType = response.headers.get('content-type') ?? 'text/plain';
+      const isPdf = isPdfResponse(url, contentType);
+      const contentLength = bytes.byteLength;
+      const extracted = isPdf
+        ? await extractPdf(bytes, maxChars)
+        : extractContent(bytesToText(bytes), contentType, maxChars);
+
+      // Step 6: Format output
+      const titleLine = extracted.title
+        ? `Title: ${extracted.title}\nURL: ${url}\n\n`
+        : `URL: ${url}\n\n`;
+      const output = titleLine + extracted.content;
+
+      logger.info(
+        {
+          url,
+          contentType,
+          isPdf,
+          contentLength,
+          extractedLength: extracted.content.length,
+        },
+        'web_fetch completed',
+      );
+
+      return { output, isError: false };
+    } finally {
+      clearTimeout(timeout);
+      await dispatcher.close();
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    logger.error({ url, error: message }, 'web_fetch failed');
+    return { output: `Fetch failed: ${message}`, isError: true };
+  }
 }
 
 /**
