@@ -331,6 +331,30 @@ export const en = {
     uploadFailed: 'Upload failed',
     saveFailed: 'Save failed',
     loadItemError: 'Failed to load "{name}"',
+    guideTitle: 'Build a Skill with Projector',
+    guideIntro:
+      'Ask your agent to build an interactive HTML tool, open it here, fill in the form, and the tool saves a SKILL.md to your Workspace — all without leaving the browser.',
+    step1Title: 'Open Conversations',
+    step1Body:
+      'Send your agent a prompt asking it to build a skill-builder tool in the Projector (see the example below).',
+    step2Title: 'Agent builds the tool',
+    step2Body:
+      'Your agent writes a self-contained HTML app and saves it to Output/Projector/ in your Workspace.',
+    step3Title: 'Launch it here',
+    step3Body: 'Return to Projector — the new tool appears as a card. Click it to open the workbench.',
+    step4Title: 'Fill in the form',
+    step4Body:
+      'Enter the skill name, description, trigger phrases, and step-by-step instructions in the interactive fields.',
+    step5Title: 'Save to Workspace',
+    step5Body:
+      'Click Save inside the tool. It writes a SKILL.md file to your Workspace via the Projector bridge.',
+    step6Title: 'Activate the skill',
+    step6Body: 'Go to Skills → Your Skills. Your new skill is live and available to all your agents.',
+    samplePromptLabel: 'Example prompt to send your agent',
+    samplePrompt:
+      'Build me a Projector skill-builder tool for a "supplier-invoice-check" skill. Include a form with fields for: name, description, trigger phrases, and numbered step-by-step instructions. When I click Save, write the result as a SKILL.md to my workspace.',
+    copyPrompt: 'Copy',
+    copied: 'Copied!',
   },
 
   packDetail: {

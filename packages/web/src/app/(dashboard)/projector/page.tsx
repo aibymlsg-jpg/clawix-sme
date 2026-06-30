@@ -1,10 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Loader2, MonitorPlay } from 'lucide-react';
+import { Check, ChevronDown, Copy, Loader2, MonitorPlay } from 'lucide-react';
 import { authFetch, getAccessToken } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { useLanguage } from '@/i18n';
 
 /* ------------------------------------------------------------------ */
@@ -38,7 +43,17 @@ export default function ProjectorPage() {
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [activeHtml, setActiveHtml] = useState<string | null>(null);
   const [loadingHtml, setLoadingHtml] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(true);
+  const [copied, setCopied] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const handleCopy = useCallback(() => {
+    const prompt = t('projector.samplePrompt');
+    void navigator.clipboard.writeText(prompt).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [t]);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -187,6 +202,82 @@ export default function ProjectorPage() {
         </div>
         <p className="text-sm text-muted-foreground">{t('projector.subtitle')}</p>
       </div>
+
+      {/* Step-by-step guide */}
+      <Collapsible open={guideOpen} onOpenChange={setGuideOpen}>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold">{t('projector.guideTitle')}</span>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="ml-auto rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
+              aria-label={guideOpen ? 'Collapse guide' : 'Expand guide'}
+            >
+              <ChevronDown
+                className={cn(
+                  'size-4 transition-transform duration-200',
+                  guideOpen && 'rotate-180',
+                )}
+              />
+            </button>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent>
+          <div className="mt-3 flex flex-col gap-5 rounded-xl border border-border/60 bg-card/50 p-5">
+            <p className="text-sm text-muted-foreground">{t('projector.guideIntro')}</p>
+
+            {/* Steps grid */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {(
+                [
+                  { title: t('projector.step1Title'), body: t('projector.step1Body') },
+                  { title: t('projector.step2Title'), body: t('projector.step2Body') },
+                  { title: t('projector.step3Title'), body: t('projector.step3Body') },
+                  { title: t('projector.step4Title'), body: t('projector.step4Body') },
+                  { title: t('projector.step5Title'), body: t('projector.step5Body') },
+                  { title: t('projector.step6Title'), body: t('projector.step6Body') },
+                ] as { title: string; body: string }[]
+              ).map((step, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col gap-2 rounded-lg border border-border/50 bg-background/60 p-3.5"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-[10px] font-bold text-primary">
+                      {i + 1}
+                    </span>
+                    <span className="text-xs font-semibold leading-tight">{step.title}</span>
+                  </div>
+                  <p className="text-xs leading-relaxed text-muted-foreground">{step.body}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Sample prompt */}
+            <div className="rounded-lg border border-border/50 bg-muted/30">
+              <div className="flex items-center justify-between border-b border-border/40 px-4 py-2">
+                <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">
+                  {t('projector.samplePromptLabel')}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded px-2 py-1 font-mono text-[10px] transition-colors',
+                    copied ? 'text-green-400' : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+                  {copied ? t('projector.copied') : t('projector.copyPrompt')}
+                </button>
+              </div>
+              <pre className="whitespace-pre-wrap px-4 py-3 text-xs leading-relaxed text-foreground/80">
+                {t('projector.samplePrompt')}
+              </pre>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Error */}
       {error && (

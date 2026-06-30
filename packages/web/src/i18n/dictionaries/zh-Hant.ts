@@ -330,6 +330,26 @@ export const zhHant: Dictionary = {
     uploadFailed: '上傳失敗',
     saveFailed: '儲存失敗',
     loadItemError: '載入「{name}」失敗',
+    guideTitle: '使用投影建立技能',
+    guideIntro:
+      '請你的代理建立一個互動式 HTML 工具，在此開啟它，填寫表單，工具便會自動將 SKILL.md 儲存至你的工作區——全程無需離開瀏覽器。',
+    step1Title: '開啟對話',
+    step1Body: '傳送提示給你的代理，要求其在投影中建立一個技能建構工具（參見下方範例）。',
+    step2Title: '代理建構工具',
+    step2Body: '你的代理會撰寫一個獨立的 HTML 應用程式，並儲存至工作區的 Output/Projector/。',
+    step3Title: '在此啟動',
+    step3Body: '返回投影——新工具將顯示為一張卡片。點選以開啟工作台。',
+    step4Title: '填寫表單',
+    step4Body: '在互動欄位中輸入技能名稱、描述、觸發語句和逐步指示。',
+    step5Title: '儲存至工作區',
+    step5Body: '在工具中點擊「儲存」。它將透過投影橋接器自動將 SKILL.md 寫入你的工作區。',
+    step6Title: '啟用技能',
+    step6Body: '前往技能 → 你的技能。你的新技能已上線，可供所有代理使用。',
+    samplePromptLabel: '傳給代理的範例提示',
+    samplePrompt:
+      '請為我建立一個「supplier-invoice-check」技能的投影技能建構工具。包含以下欄位的表單：名稱、描述、觸發語句和編號逐步指示。當我點擊儲存時，請將結果寫入我的工作區作為 SKILL.md。',
+    copyPrompt: '複製',
+    copied: '已複製！',
   },
 
   packDetail: {

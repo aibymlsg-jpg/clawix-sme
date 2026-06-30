@@ -2,6 +2,10 @@
 location ~ ^/(api|auth|admin|health|notifications|groups|providers)(/.*)?$ {
     resolver 127.0.0.11 valid=30s;
     set $api http://clawix-api:3001;
+    # nginx's default (1m) is well under the API's WORKSPACE_UPLOAD_MAX_SIZE
+    # (50 MB) and was causing workspace file uploads to fail with 413 before
+    # ever reaching the app. Keep in sync with WORKSPACE_UPLOAD_MAX_SIZE.
+    client_max_body_size 50m;
     proxy_pass $api;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
