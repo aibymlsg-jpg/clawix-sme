@@ -18,25 +18,74 @@ If the tool needs live data (exchange rates, etc.), YOU must fetch it first with
 
 ---
 
+## Two Projector Patterns — Choose Before You Build
+
+### Pattern A — HTML Widget (interactive browser tool)
+
+A self-contained HTML page. No framework, no CDN, no network calls. Pure HTML + CSS + vanilla JS.
+**Use for:** calculators, converters, trackers, timers, form builders, data visualizers.
+
+**Concrete example — Fundraising Goal Tracker:**
+`/skills/builtin/projector-creator/references/example-fundraising-tracker.html`
+
+It renders two draggable number inputs (Raised / Goal), a progress bar, and a live percentage.
+This is the quality bar for HTML widgets. Every widget you build must be at least this complete.
+
+**When to use the full sidebar layout** (from `starter-template.html`):
+Only use the sidebar when the tool has 4+ distinct controls OR separate "settings" vs "output" areas
+(e.g. image editor, data visualizer). For simple tools — use the centered layout like the fundraising example.
+
+---
+
+### Pattern B — Content / Graphics Generator (agent-driven, no HTML sandbox)
+
+The agent uses its own tools to produce files the user keeps: social media posts, graphics packs,
+campaign assets, reports. Output goes to `/workspace/Output/`.
+**Use for:** social media content, campaign materials, promotional graphics, awareness kits, document generation.
+
+Tool sequence:
+1. `web_search` — gather facts and statistics for the content
+2. `web_search` (image mode) — find free-use graphics (Unsplash, Pexels, Wikimedia Commons)
+3. `shell("mkdir -p /workspace/Output/campaigns/<slug>")` — create the output directory first
+4. `file_download(url, path)` — save each image into that directory; verify success before continuing
+5. `write_file` — write captions, hashtags, CTAs, and a README into the same directory
+
+**Concrete example — Campaign Content Creator:**
+`/skills/builtin/projector-creator/references/example-campaign-content-creator.md`
+
+Read this file for the complete workflow, directory structure, and rules (slugify names, verify downloads, embed facts in copy — not just links).
+
+> **Pattern B does NOT produce an `index.html`.** Output is a folder of assets. Never apply HTML widget
+> rules (no-fetch sandbox, `write_file index.html`) to a content-generator request.
+
+---
+
 ## Coordination Workflow (For Primary Agents)
 
 You are a COORDINATOR for projector tasks. **NEVER create or modify projector items yourself.**
-When the user asks to create, modify, or fix a projector item:
 
-Split into exactly 3 spawns that run **STRICTLY ONE AT A TIME — they are dependent, NOT parallel.**
+### Step 0 — Choose the pattern
 
-> **Emit only ONE `spawn` call per turn, then WAIT for it to return successfully before emitting the next.**
-> Step #2 edits the file Step #1 writes, and Step #3 verifies the file Step #2 edits. If you batch
-> two or three `spawn` calls into a single turn, Step #2 starts before the HTML file exists, finds no
-> `// JAVASCRIPT GOES HERE` placeholder to edit, and spins until it hits the sub-agent wall-clock timeout.
+Read the request and decide:
+
+| Request sounds like… | Pattern | Spawns |
+|---|---|---|
+| "make a calculator / tracker / converter / timer / form / widget" | **A — HTML Widget** | 3 spawns below |
+| "create content / generate graphics / make campaign materials / download images / write social posts" | **B — Content Generator** | 1 spawn below |
+
+If unsure, default to **Pattern B** when the user wants **files to keep/publish**, and **Pattern A** when they want an **interactive browser tool**.
+
+---
+
+### Pattern A — HTML Widget (3 spawns, strictly sequential)
+
+> **Emit only ONE `spawn` call per turn, then WAIT for it to return before emitting the next.**
 > NEVER put more than one `spawn` in the same turn.
-
-Run all three automatically, in order — NEVER ask the user for permission between steps.
 
 **Spawn #1 (HTML + CSS):**
 
 ```
-spawn(agent_name="coder", prompt="read_file(\"/skills/builtin/projector-creator/SKILL.md\"). read_file(\"/skills/builtin/projector-creator/references/starter-template.html\"). Copy starter template to /workspace/projector/<NAME>/index.html. Replace ALL placeholders. Build the COMPLETE HTML structure with all controls, inputs, buttons, sliders, dropzone, content areas. Add ALL needed CSS. The <script> should contain ONLY: <script>// JAVASCRIPT GOES HERE</script>. Do NOT write any JS yet. Verify file ends with </html>. TASK: <user requirements>")
+spawn(agent_name="coder", prompt="read_file(\"/skills/builtin/projector-creator/SKILL.md\"). Then read_file(\"/skills/builtin/projector-creator/references/example-fundraising-tracker.html\") — this is the quality bar; your widget must be at least this complete and functional. For simple tools (calculator, tracker, converter, form): use the centered layout from that example. For complex tools with 4+ distinct control groups only: also read_file(\"/skills/builtin/projector-creator/references/starter-template.html\") and use the sidebar layout. Write the COMPLETE HTML+CSS to /workspace/projector/<NAME>/index.html. The <script> tag should contain ONLY: // JAVASCRIPT GOES HERE. Do NOT write any JS yet. Verify file ends with </html>. TASK: <user requirements>")
 ```
 
 **Spawn #2 (JavaScript):**
@@ -57,23 +106,33 @@ spawn(agent_name="coder", prompt="read_file /workspace/projector/<NAME>/index.ht
 
 ---
 
+### Pattern B — Content / Graphics Generator (1 spawn)
+
+```
+spawn(agent_name="coder", prompt="read_file(\"/skills/builtin/projector-creator/references/example-campaign-content-creator.md\") — follow that workflow exactly. TASK: <user requirements>. Output directory: /workspace/Output/campaigns/<slug>/. Steps: (1) web_search for facts and statistics. (2) web_search (images) for free-use graphics on Unsplash/Pexels/Wikimedia. (3) shell mkdir -p <output_dir>. (4) file_download each selected image into <output_dir>; verify each download. (5) write_file posts.txt with captions, hashtags, CTAs per platform. (6) write_file README.txt listing all assets. Report the output path when done.")
+```
+
+**Then report:** "Your campaign pack **<name>** is ready in `/workspace/Output/campaigns/<slug>/`. It includes <N> graphics and ready-to-post captions in `posts.txt`."
+
+---
+
 ## Implementation Guide (For Sub-Agents / Coder)
 
-Use this skill whenever creating or modifying a projector item. It ensures every tool is polished, functional, and follows the design system.
+### Pattern A — HTML Widget
 
-### Process
+1. Read the quality-bar example: `read_file("/skills/builtin/projector-creator/references/example-fundraising-tracker.html")`
+2. For complex tools (4+ control groups), also read `starter-template.html` for the sidebar layout.
+3. Write the full HTML+CSS to `/workspace/projector/<tool-name>/index.html`.
+4. Read `/skills/builtin/projector-creator/references/js-patterns.md` for ready-to-use JS code blocks.
+5. Use `edit_file` to replace the script placeholder with complete, working JavaScript.
+6. Verify the file ends with `</html>` and has no stubs or TODOs.
 
-1. **Read the starter template**: `read_file("/skills/builtin/projector-creator/references/starter-template.html")`
-   This is a ready-to-use HTML skeleton with all the correct CSS styling already included.
-2. **Copy the starter template** to `/workspace/projector/<tool-name>/index.html` using `write_file`.
-   Replace TOOL_TITLE, TOOL, TOOL_SUBTITLE placeholders with real values.
-   Replace the sidebar sections with the actual controls needed.
-   Replace the content-main with the actual display area.
-   Keep ALL the existing CSS — do NOT rewrite it.
-3. **For JavaScript**: read `/skills/builtin/projector-creator/references/js-patterns.md` for ready-to-use code blocks.
-   Use `edit_file` to replace the placeholder JavaScript with real, working functions.
-   Each `edit_file` call should add one function at a time if the JS is complex.
-4. **Verify** by reading the file back — check it ends with `</html>` and has no empty functions.
+### Pattern B — Content / Graphics Generator
+
+1. Read the workflow guide: `read_file("/skills/builtin/projector-creator/references/example-campaign-content-creator.md")`
+2. Follow the 7-step workflow in that file exactly (research → images → mkdir → download → write copy → README → report).
+3. Output goes to `/workspace/Output/campaigns/<slug>/` — never to `/workspace/projector/`.
+4. Do NOT produce an `index.html`. Output is a folder of asset files.
 
 For complex tools, also read the reference example for inspiration:
 `read_file("/skills/builtin/projector-creator/references/template-image-sharpener.html")`

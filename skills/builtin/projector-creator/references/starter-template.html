@@ -83,27 +83,49 @@
 
 <script>
   // TOOL_TITLE — JavaScript
-  // Replace these placeholder functions with real implementations.
+  // Sub-agent: replace the bodies of calculate() and resetForm() with real logic.
+  // Do NOT rename the functions — they are wired to the buttons above.
 
   function calculate() {
-    // TODO: implement
+    // Read inputs, compute result, update the result card.
+    // Example pattern:
+    //   var val = +document.getElementById('myInput').value;
+    //   document.getElementById('resultRows').innerHTML = '<div class="result-row"><span class="result-label">Output</span><span class="result-value">' + val + '</span></div>';
+    //   document.getElementById('resultCard').style.display = 'block';
+    //   document.getElementById('statusInfo').textContent = 'Calculated';
   }
 
   function resetForm() {
-    // TODO: implement
+    // Clear inputs and hide result card.
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('resultRows').innerHTML = '';
+    document.getElementById('statusInfo').textContent = 'Ready';
   }
 
-  // Save to workspace helper
+  // Save text file to workspace (postMessage bridge)
   function saveToWorkspace(filename, textContent) {
     window.parent.postMessage({ type: 'projector:save', filename: filename, content: textContent, encoding: 'text' }, '*');
   }
+
+  // Save binary file (canvas / image) to workspace
   function saveBinaryToWorkspace(filename, canvas) {
     canvas.toBlob(function(blob) {
       var reader = new FileReader();
-      reader.onload = function() { window.parent.postMessage({ type: 'projector:save', filename: filename, content: reader.result.split(',')[1], encoding: 'base64' }, '*'); };
+      reader.onload = function() {
+        window.parent.postMessage({ type: 'projector:save', filename: filename, content: reader.result.split(',')[1], encoding: 'base64' }, '*');
+      };
       reader.readAsDataURL(blob);
     });
   }
+
+  // Optional: listen for save confirmation
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'projector:save-result') {
+      document.getElementById('statusInfo').textContent = event.data.success
+        ? 'Saved: ' + event.data.path
+        : 'Save failed: ' + event.data.error;
+    }
+  });
 </script>
 </body>
 </html>
